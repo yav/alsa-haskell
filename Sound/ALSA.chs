@@ -8,25 +8,53 @@ import Control.Exception (throw)
 
 {#context prefix = "snd_"#}
 
-{#pointer *snd_pcm_t as PCM newtype #}
+{#pointer *snd_pcm_t as Pcm newtype #}
 
-instance Storable PCM where
-    sizeOf (PCM r) = sizeOf r
-    alignment (PCM r) = alignment r
-    peek p = fmap PCM (peek (castPtr p))
-    poke p (PCM r) = poke (castPtr p) r
+instance Storable Pcm where
+    sizeOf (Pcm r) = sizeOf r
+    alignment (Pcm r) = alignment r
+    peek p = fmap Pcm (peek (castPtr p))
+    poke p (Pcm r) = poke (castPtr p) r
 
-{#enum _snd_pcm_stream as PCMStream {underscoreToCase} deriving (Eq,Show)#}
+{#pointer *snd_pcm_hw_params_t as PcmHwParams newtype #}
+
+{#enum _snd_pcm_stream as PcmStream {underscoreToCase} deriving (Eq,Show)#}
 
 
 {#fun pcm_open
-  { alloca- `PCM' peek*,
+  { alloca- `Pcm' peek*,
     withCString* `String',
-    cFromEnum `PCMStream',
+    cFromEnum `PcmStream',
     `Int'}
  -> `()' result*- #}
   where result = checkResult_ "pcm_open"
 
+{#fun pcm_close
+  { id `Pcm' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_close"
+
+{#fun pcm_prepare
+  { id `Pcm' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_prepare"
+
+{#fun pcm_hw_params
+  { id `Pcm',
+    id `PcmHwParams' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params"
+
+{-
+snd_pcm_hw_params_malloc
+snd_pcm_hw_params_free
+snd_pcm_hw_params_any
+snd_pcm_hw_params_set_access
+snd_pcm_hw_params_set_format
+snd_pcm_hw_params_set_rate_near
+snd_pcm_hw_params_set_channels
+snd_pcm_readi
+-}
 
 
 checkResult :: String -> CInt -> IO CInt
