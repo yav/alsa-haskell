@@ -1,0 +1,12 @@
+Name: halsa
+Version: 0.1
+Copyright: Bjorn Bringert
+Maintainer: bjorn@bringert.net
+Author: Bjorn Bringert
+License: BSD3
+build-depends: base
+Extensions: ForeignFunctionInterface
+Synopsis: Binding to the ALSA Library API.
+Ghc-options: 
+Exposed-Modules: Sound.ALSA
+Other-modules: Sound.ALSA.C2HS
