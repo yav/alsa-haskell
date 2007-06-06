@@ -102,6 +102,14 @@ instance Storable PcmHwParams where
  -> `Int' result* #}
   where result = fmap fromIntegral . checkResult "pcm_readi"
 
+{#fun pcm_writei
+  { id `Pcm',
+    id `Ptr ()',
+    `Int'
+ }
+ -> `Int' result* #}
+  where result = fmap fromIntegral . checkResult "pcm_writei"
+
 {#fun pcm_hw_params_malloc
   { alloca- `PcmHwParams' peek* }
  -> `()' result*- #}
