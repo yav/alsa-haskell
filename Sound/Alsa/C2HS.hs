@@ -34,7 +34,7 @@
 --  with the C->HS-specific higher-level marshalling routines.
 --
 
-module Sound.ALSA.C2HS (
+module Sound.Alsa.C2HS (
 
   -- * Re-export the language-independent component of the FFI 
   module Foreign,

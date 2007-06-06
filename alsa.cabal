@@ -8,5 +8,5 @@ build-depends: base
 Extensions: ForeignFunctionInterface
 Synopsis: Binding to the ALSA Library API.
 Ghc-options: 
-Exposed-Modules: Sound.ALSA
-Other-modules: Sound.ALSA.C2HS
+Exposed-Modules: Sound.Alsa
+Other-modules: Sound.Alsa.C2HS

@@ -1,6 +1,6 @@
-module Sound.ALSA where
+module Sound.Alsa where
 
-import Sound.ALSA.C2HS
+import Sound.Alsa.C2HS
 
 import Control.Exception (throw)
 
