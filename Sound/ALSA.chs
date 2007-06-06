@@ -18,6 +18,12 @@ instance Storable Pcm where
 
 {#pointer *snd_pcm_hw_params_t as PcmHwParams newtype #}
 
+instance Storable PcmHwParams where
+    sizeOf (PcmHwParams r) = sizeOf r
+    alignment (PcmHwParams r) = alignment r
+    peek p = fmap PcmHwParams (peek (castPtr p))
+    poke p (PcmHwParams r) = poke (castPtr p) r
+
 {#enum _snd_pcm_stream as PcmStream {underscoreToCase} deriving (Eq,Show)#}
 
 {#enum _snd_pcm_access as PcmAccess {underscoreToCase} deriving (Eq,Show)#}
@@ -88,16 +94,30 @@ instance Storable Pcm where
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_set_channels"
 
-{-
-snd_pcm_hw_params_malloc
-snd_pcm_hw_params_free
-snd_pcm_readi
--}
+{#fun pcm_readi
+  { id `Pcm',
+    id `Ptr ()',
+    `Int'
+ }
+ -> `Int' result* #}
+  where result = fmap fromIntegral . checkResult "pcm_readi"
 
+{#fun pcm_hw_params_malloc
+  { alloca- `PcmHwParams' peek* }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_malloc"
 
-checkResult :: String -> CInt -> IO CInt
-checkResult f r | r < 0 = ioError (errnoToIOError f (Errno r) Nothing Nothing)
+{#fun pcm_hw_params_free
+  { id `PcmHwParams' }
+ -> `()' #}
+
+--
+-- * Marshalling utilities
+--
+
+checkResult :: Integral a => String -> a -> IO a
+checkResult f r | r < 0 = ioError (errnoToIOError f (Errno (fromIntegral r)) Nothing Nothing)
                 | otherwise = return r
 
-checkResult_ :: String -> CInt -> IO ()
+checkResult_ :: Integral a => String -> a -> IO ()
 checkResult_ f r = checkResult f r >> return ()
