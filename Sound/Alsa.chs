@@ -96,7 +96,7 @@ instance Storable PcmHwParams where
 
 {#fun pcm_readi
   { id `Pcm',
-    id `Ptr ()',
+    castPtr `Ptr a',
     `Int'
  }
  -> `Int' result* #}
@@ -104,7 +104,7 @@ instance Storable PcmHwParams where
 
 {#fun pcm_writei
   { id `Pcm',
-    id `Ptr ()',
+    castPtr `Ptr a',
     `Int'
  }
  -> `Int' result* #}
