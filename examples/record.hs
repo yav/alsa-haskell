@@ -3,6 +3,9 @@ import Sound.Alsa
 import Foreign
 import Data.Word
 
+bufSize :: Int
+bufSize = 4096
+
 main :: IO ()
 main = 
     do h <- pcm_open "default" PcmStreamCapture 0
@@ -15,14 +18,18 @@ main =
        pcm_hw_params h p
        pcm_hw_params_free p
        pcm_prepare h
-       allocaBytes 256 $ \buf -> do pcm_readi h buf 128
-                                    dump (castPtr buf) 128
+       allocaArray bufSize $ loop h bufSize
        pcm_close h
 
-dump :: Ptr Word16 -> Int -> IO ()
-dump p n | n == 0 = return ()
-         | otherwise =
-             do x <- peek p
-                print x
-                dump (p `plusPtr` 2) (n-1)
-              
+
+loop :: Pcm -> Int -> Ptr Int16 -> IO ()
+loop h n buf =
+    do pcm_readi h buf n
+       avg <- avgBuf buf n
+       putStrLn (replicate (avg `div` 20) '*')
+       loop h n buf
+
+avgBuf :: (Storable a, Integral a) => Ptr a -> Int -> IO Int
+avgBuf buf n = do xs <- peekArray n buf
+                  let xs' = map (fromIntegral . abs) xs :: [Int]
+                  return $ sum xs' `div` fromIntegral n
