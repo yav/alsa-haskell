@@ -124,7 +124,7 @@ instance Storable PcmHwParams where
 --
 
 checkResult :: Integral a => String -> a -> IO a
-checkResult f r | r < 0 = ioError (errnoToIOError f (Errno (fromIntegral r)) Nothing Nothing)
+checkResult f r | r < 0 = ioError (errnoToIOError f (Errno (fromIntegral (negate r))) Nothing Nothing)
                 | otherwise = return r
 
 checkResult_ :: Integral a => String -> a -> IO ()
