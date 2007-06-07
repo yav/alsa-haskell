@@ -30,6 +30,8 @@ instance Storable PcmHwParams where
 
 {#enum _snd_pcm_format as PcmFormat {underscoreToCase} deriving (Eq,Show)#}
 
+-- | Frame count.
+type PcmSFrames = {#type snd_pcm_sframes_t#}
 
 {#fun pcm_open
   { alloca- `Pcm' peek*,
@@ -97,17 +99,17 @@ instance Storable PcmHwParams where
 {#fun pcm_readi
   { id `Pcm',
     castPtr `Ptr a',
-    `Int'
+    cIntConv `PcmSFrames'
  }
- -> `Int' result* #}
+ -> `PcmSFrames' result* #}
   where result = fmap fromIntegral . checkResult "pcm_readi"
 
 {#fun pcm_writei
   { id `Pcm',
     castPtr `Ptr a',
-    `Int'
+    cIntConv `PcmSFrames'
  }
- -> `Int' result* #}
+ -> `PcmSFrames' result* #}
   where result = fmap fromIntegral . checkResult "pcm_writei"
 
 {#fun pcm_hw_params_malloc
