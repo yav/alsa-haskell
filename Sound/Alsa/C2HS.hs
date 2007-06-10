@@ -116,6 +116,7 @@ peekEnum  = liftM cToEnum . peek
 -- Storing of 'Maybe' values
 -- -------------------------
 
+{-
 instance Storable a => Storable (Maybe a) where
   sizeOf    _ = sizeOf    (undefined :: Ptr ())
   alignment _ = alignment (undefined :: Ptr ())
@@ -131,7 +132,7 @@ instance Storable a => Storable (Maybe a) where
 		        Nothing -> return nullPtr
 			Just v' -> new v'
                poke (castPtr p) ptr
-
+-}
 
 -- Conditional results using 'Maybe'
 -- ---------------------------------
