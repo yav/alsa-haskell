@@ -116,6 +116,17 @@ instance Storable PcmHwParams where
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_set_rate"
 
+{-
+-- Available in 1.0.9rc2 and later
+{#fun pcm_hw_params_set_rate_resample
+  { id `Pcm',
+    id `PcmHwParams',
+    `Bool'
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_set_rate_resample"
+-}
+
 {#fun pcm_hw_params_set_channels
   { id `Pcm',
     id `PcmHwParams',
