@@ -152,10 +152,16 @@ instance Storable PcmHwParams where
   { id `PcmHwParams' }
  -> `()' #}
 
+{#fun strerror
+  `Integral a' =>
+  { cIntConv `a' }
+ -> `String' peekCString* #}
+
 --
 -- * Marshalling utilities
 --
 
+-- FIXME: use throwDyn?
 checkResult :: Integral a => String -> a -> IO a
 checkResult f r | r < 0 = ioError (errnoToIOError f (Errno (fromIntegral (negate r))) Nothing Nothing)
                 | otherwise = return r
