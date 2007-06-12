@@ -125,7 +125,11 @@ alsaRead :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
 alsaRead _ h buf n = pcm_readi h buf n
 
 alsaWrite :: SoundFmt -> Pcm -> Ptr () -> Int -> IO ()
-alsaWrite _ h buf n = pcm_writei h buf n >> return ()
+alsaWrite _ h buf n = 
+     do hPutStrLn stderr $ "Writing " ++ show n ++ " samples..."
+        n' <- pcm_writei h buf n 
+        when (n' /= n) $ hPutStrLn stderr $ "Buffer underrun (" ++ show n' ++ " /= " ++ show n ++ ")"
+	return ()
 -- FIXME: check return count from pcm_writei?
 
 alsaClose :: Pcm -> IO ()
