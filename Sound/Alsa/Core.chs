@@ -65,6 +65,20 @@ instance Storable PcmHwParams where
  -> `()' result*- #}
   where result = checkResult_ "pcm_drain"
 
+{-
+-- Only available in 1.0.11rc3 and later
+{#fun pcm_set_params
+  { id `Pcm',
+    cFromEnum `PcmFormat',
+    cFromEnum `PcmAccess',
+    `Int',
+    `Int',
+    `Bool',
+    `Int' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_set_params"
+-}
+
 {#fun pcm_hw_params
   { id `Pcm',
     id `PcmHwParams' }
