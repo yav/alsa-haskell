@@ -121,7 +121,7 @@ instance Storable PcmSwParams where
   { id `Pcm',
     id `PcmHwParams',
     `Int',
-    `Int'
+    orderingToInt `Ordering'
  }
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_set_rate"
@@ -165,7 +165,7 @@ instance Storable PcmSwParams where
   { id `Pcm',
     id `PcmHwParams',
     `Int',
-    `Int'
+    orderingToInt `Ordering'
  }
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_set_periods"
@@ -174,7 +174,7 @@ instance Storable PcmSwParams where
   { id `Pcm',
     id `PcmHwParams',
     `Int',
-    `Int'
+    withOrdering* `Ordering' peekOrdering*
  }
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_set_buffer_time_near"
@@ -182,7 +182,7 @@ instance Storable PcmSwParams where
 {#fun pcm_hw_params_get_buffer_time
   { id `PcmHwParams',
     alloca- `Int' peekIntConv*,
-    alloca- `Int' peekIntConv*
+    alloca- `Ordering' peekOrdering*
  }
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_get_buffer_time"
@@ -256,3 +256,15 @@ checkResult f r | r < 0 = ioError (errnoToIOError f (Errno (fromIntegral (negate
 
 checkResult_ :: Integral a => String -> a -> IO ()
 checkResult_ f r = checkResult f r >> return ()
+
+orderingToInt :: Ordering -> CInt
+orderingToInt o = fromIntegral (fromEnum o - 1)
+
+intToOrdering :: CInt -> Ordering
+intToOrdering i = toEnum (fromIntegral i + 1)
+
+peekOrdering :: Ptr CInt -> IO Ordering
+peekOrdering = fmap intToOrdering . peek
+
+withOrdering :: Ordering -> (Ptr CInt -> IO a) -> IO a
+withOrdering o = with (orderingToInt o)
