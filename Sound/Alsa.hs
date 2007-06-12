@@ -98,6 +98,10 @@ alsaOpen dev fmt stream =
                          period_time
        setSwParams h buffer_size period_size
        pcm_prepare h
+       hPutStrLn stderr $ "buffer_time = " ++ show buffer_time
+       hPutStrLn stderr $ "buffer_size = " ++ show buffer_size
+       hPutStrLn stderr $ "period_time = " ++ show period_time
+       hPutStrLn stderr $ "period_size = " ++ show period_size
        return h
 
 sampleFmtToPcmFormat :: SampleFmt -> PcmFormat
@@ -162,9 +166,8 @@ alsaWrite :: SoundFmt -> Pcm -> Ptr () -> Int -> IO ()
 alsaWrite _ h buf n = 
      do hPutStrLn stderr $ "Writing " ++ show n ++ " samples..."
         n' <- pcm_writei h buf n 
-        when (n' /= n) $ hPutStrLn stderr $ "Buffer underrun (" ++ show n' ++ " /= " ++ show n ++ ")"
+        when (n' /= n) $ hPutStrLn stderr $ "Didn't write all data (" ++ show n' ++ " /= " ++ show n ++ ")"
 	return ()
--- FIXME: check return count from pcm_writei?
 
 alsaClose :: Pcm -> IO ()
 alsaClose pcm = 
