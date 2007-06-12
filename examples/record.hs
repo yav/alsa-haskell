@@ -6,28 +6,28 @@ import Data.Word
 bufSize :: Int
 bufSize = 4096
 
+inputFormat :: SoundFmt
+inputFormat = SoundFmt {
+                sampleFmt   = SampleFmtLinear16BitSignedLE,
+                sampleFreq  = 8000,
+                numChannels = 1
+                }
+
+
 main :: IO ()
 main = 
-    do h <- pcm_open "default" PcmStreamCapture 0
-       p <- pcm_hw_params_malloc
-       pcm_hw_params_any h p
-       pcm_hw_params_set_access h p PcmAccessRwInterleaved
-       pcm_hw_params_set_format h p PcmFormatS16Le
-       pcm_hw_params_set_rate h p 44100 0
-       pcm_hw_params_set_channels h p 1
-       pcm_hw_params h p
-       pcm_hw_params_free p
-       pcm_prepare h
-       allocaArray bufSize $ loop h bufSize
-       pcm_close h
+    do let src = alsaSoundSource "plughw:0,0" inputFormat
+       h <- soundSourceOpen src
+       allocaArray bufSize $ loop src h bufSize
+       soundSourceClose src h
 
-
-loop :: Pcm -> Int -> Ptr Int16 -> IO ()
-loop h n buf =
-    do pcm_readi h buf n
-       avg <- avgBuf buf n
+-- FIXME: assumes little-endian machine
+loop :: SoundSource h -> h -> Int -> Ptr Int16 -> IO ()
+loop src h n buf =
+    do n' <- soundSourceRead src h (castPtr buf) n
+       avg <- avgBuf buf n'
        putStrLn (replicate (avg `div` 20) '*')
-       loop h n buf
+       loop src h n buf
 
 avgBuf :: (Storable a, Integral a) => Ptr a -> Int -> IO Int
 avgBuf buf n = do xs <- peekArray n buf
