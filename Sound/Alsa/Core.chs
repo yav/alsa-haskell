@@ -55,6 +55,16 @@ instance Storable PcmHwParams where
  -> `()' result*- #}
   where result = checkResult_ "pcm_prepare"
 
+{#fun pcm_drop
+  { id `Pcm' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_drop"
+
+{#fun pcm_drain
+  { id `Pcm' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_drain"
+
 {#fun pcm_hw_params
   { id `Pcm',
     id `PcmHwParams' }
@@ -99,6 +109,23 @@ instance Storable PcmHwParams where
  }
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_set_channels"
+
+{#fun pcm_hw_params_set_buffer_size
+  { id `Pcm',
+    id `PcmHwParams',
+    `Int'
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_set_buffer_size"
+
+{#fun pcm_hw_params_set_periods
+  { id `Pcm',
+    id `PcmHwParams',
+    `Int',
+    `Int'
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_set_periods"
 
 {#fun pcm_readi
   { id `Pcm',
