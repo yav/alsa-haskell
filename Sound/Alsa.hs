@@ -2,6 +2,7 @@ module Sound.Alsa where
 
 import Sound.Alsa.Core
 
+import Control.Monad
 import Foreign.Ptr (Ptr)
 import System.IO
 
@@ -71,7 +72,7 @@ soundSinkBytesPerFrame = audioBytesPerFrame . soundSinkFmt
 
 soundSourceReadBytes :: SoundSource h -> h -> Ptr () -> Int -> IO Int
 soundSourceReadBytes src h buf n = 
-	fmap (* c) $ soundSourceRead src h buf (n `div` c)
+	liftM (* c) $ soundSourceRead src h buf (n `div` c)
   where c = soundSourceBytesPerFrame src
 
 soundSinkWriteBytes :: SoundSink h -> h -> Ptr () -> Int -> IO ()
@@ -138,7 +139,7 @@ alsaSoundSink dev fmt = SoundSink {
 --
 
 fileRead :: SoundFmt -> Handle -> Ptr () -> Int -> IO Int
-fileRead fmt h buf n = fmap (`div` c) $ hGetBuf h buf (n * c)
+fileRead fmt h buf n = liftM (`div` c) $ hGetBuf h buf (n * c)
   where c = audioBytesPerSample fmt
 
 fileWrite :: SoundFmt -> Handle -> Ptr () -> Int -> IO ()
