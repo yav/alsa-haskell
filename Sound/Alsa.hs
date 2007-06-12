@@ -74,6 +74,11 @@ soundSourceReadBytes src h buf n =
 	fmap (* c) $ soundSourceRead src h buf (n `div` c)
   where c = soundSourceBytesPerFrame src
 
+soundSinkWriteBytes :: SoundSink h -> h -> Ptr () -> Int -> IO ()
+soundSinkWriteBytes src h buf n = 
+	soundSinkWrite src h buf (n `div` c)
+  where c = soundSinkBytesPerFrame src
+
 --
 -- * Alsa stuff
 --
