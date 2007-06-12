@@ -44,6 +44,15 @@ data SoundSink handle =
 --
 --
 
+soundFmtMIME :: SoundFmt -> String
+soundFmtMIME fmt = t ++ r ++ c
+  where t = case sampleFmt fmt of
+		SampleFmtLinear16BitSignedLE -> "audio/L16"
+		SampleFmtMuLaw8Bit           -> "audio/basic"
+        r = ";rate=" ++ show (sampleFreq fmt)
+        c | numChannels fmt == 1 = ""
+	  | otherwise = ";channels=" ++ show (numChannels fmt)
+
 audioBytesPerSample :: SoundFmt -> Int
 audioBytesPerSample fmt = 
 	case sampleFmt fmt of
