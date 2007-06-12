@@ -13,13 +13,6 @@ data SampleFmt = SampleFmtLinear16BitSignedLE
                | SampleFmtMuLaw8Bit
   deriving (Show)
 
-audioBytesPerSample :: SoundFmt -> Int
-audioBytesPerSample fmt = 
-	case sampleFmt fmt of
-		SampleFmtLinear16BitSignedLE -> 2
-		SampleFmtMuLaw8Bit           -> 1
-
-
 type SampleFreq = Int
 
 data SoundFmt = SoundFmt {
@@ -46,6 +39,23 @@ data SoundSink handle =
                  soundSinkWrite :: handle -> Ptr () -> Int -> IO (),
                  soundSinkClose :: handle -> IO ()
                 }
+
+--
+--
+--
+
+audioBytesPerSample :: SoundFmt -> Int
+audioBytesPerSample fmt = 
+	case sampleFmt fmt of
+		SampleFmtLinear16BitSignedLE -> 2
+		SampleFmtMuLaw8Bit           -> 1
+
+soundSourceBytesPerSample :: SoundSource h -> Int
+soundSourceBytesPerSample = audioBytesPerSample . soundSourceFmt
+
+soundSinkBytesPerSample :: SoundSink h -> Int
+soundSinkBytesPerSample = audioBytesPerSample . soundSinkFmt
+
 --
 -- * Alsa stuff
 --
