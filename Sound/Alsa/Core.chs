@@ -160,6 +160,22 @@ instance Storable PcmSwParams where
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_get_buffer_size"
 
+{#fun pcm_hw_params_get_period_size
+  { id `PcmHwParams',
+    alloca- `Int' peekIntConv*,
+    alloca- `Ordering' peekOrdering*
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_get_period_size"
+
+{#fun pcm_hw_params_set_period_time_near
+  { id `Pcm',
+    id `PcmHwParams',
+    withIntConv* `Int' peekIntConv*,
+    withOrdering* `Ordering' peekOrdering*
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_set_period_time_near"
 
 {#fun pcm_hw_params_set_periods
   { id `Pcm',
@@ -173,7 +189,7 @@ instance Storable PcmSwParams where
 {#fun pcm_hw_params_set_buffer_time_near
   { id `Pcm',
     id `PcmHwParams',
-    `Int',
+    withIntConv* `Int' peekIntConv*,
     withOrdering* `Ordering' peekOrdering*
  }
  -> `()' result*- #}
@@ -186,6 +202,22 @@ instance Storable PcmSwParams where
  }
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_get_buffer_time"
+
+{#fun pcm_sw_params_set_start_threshold
+  { id `Pcm',
+    id `PcmSwParams',
+    `Int'
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_sw_params_set_start_threshold"
+
+{#fun pcm_sw_params_set_avail_min
+  { id `Pcm',
+    id `PcmSwParams',
+    `Int'
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_sw_params_set_avail_min"
 
 {#fun pcm_sw_params_set_xfer_align
   { id `Pcm',
