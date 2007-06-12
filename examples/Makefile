@@ -1,8 +1,8 @@
 volume_meter: volume_meter.hs
-	ghc --make -package alsa -o $@ $<
+	ghc -threaded --make -package alsa -o $@ $<
 
 record: record.hs
-	ghc --make -package alsa -o $@ $<
+	ghc -threaded --make -package alsa -o $@ $<
 
 clean:
 	-rm -f *o *.hi

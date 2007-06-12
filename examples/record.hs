@@ -35,6 +35,6 @@ record file =
 
 loop :: SoundSource h -> h -> Handle -> Int -> Ptr () -> IO ()
 loop src h fh n buf =
-    do n' <- soundSourceRead src h buf n
+    do n' <- soundSourceReadBytes src h buf n
        hPutBuf fh buf n'
        loop src h fh n buf
