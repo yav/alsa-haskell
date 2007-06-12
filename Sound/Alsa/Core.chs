@@ -4,6 +4,12 @@ import Sound.Alsa.C2HS
 
 import Control.Exception (throw)
 
+-- HACK for 32-bit machines.
+-- This is only used to be able to parse alsa/pcm.h,
+-- since snd_pcm_format_silence_64 use u_int64_t which is not
+-- defined on 32-bit machines, AFAICT
+#define u_int64_t unsigned long long int
+
 #include <alsa/asoundlib.h>
 
 {#context prefix = "snd_"#}
