@@ -50,11 +50,20 @@ audioBytesPerSample fmt =
 		SampleFmtLinear16BitSignedLE -> 2
 		SampleFmtMuLaw8Bit           -> 1
 
-soundSourceBytesPerSample :: SoundSource h -> Int
-soundSourceBytesPerSample = audioBytesPerSample . soundSourceFmt
+-- assumes interleaved data
+audioBytesPerFrame :: SoundFmt -> Int
+audioBytesPerFrame fmt = numChannels fmt * audioBytesPerSample fmt
 
-soundSinkBytesPerSample :: SoundSink h -> Int
-soundSinkBytesPerSample = audioBytesPerSample . soundSinkFmt
+soundSourceBytesPerFrame :: SoundSource h -> Int
+soundSourceBytesPerFrame = audioBytesPerFrame . soundSourceFmt
+
+soundSinkBytesPerFrame :: SoundSink h -> Int
+soundSinkBytesPerFrame = audioBytesPerFrame . soundSinkFmt
+
+soundSourceReadBytes :: SoundSource h -> h -> Ptr () -> Int -> IO Int
+soundSourceReadBytes src h buf n = 
+	fmap (* c) $ soundSourceRead src h buf (n `div` c)
+  where c = soundSourceBytesPerFrame src
 
 --
 -- * Alsa stuff
