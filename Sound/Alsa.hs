@@ -116,7 +116,9 @@ alsaWrite _ h buf n = pcm_writei h buf n >> return ()
 -- FIXME: check return count from pcm_writei?
 
 alsaClose :: Pcm -> IO ()
-alsaClose = pcm_close
+alsaClose pcm = 
+	do pcm_drain pcm
+	   pcm_close pcm
 
 alsaSoundSource :: String -> SoundFmt -> SoundSource Pcm
 alsaSoundSource dev fmt = SoundSource {
