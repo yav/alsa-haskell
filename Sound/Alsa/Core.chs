@@ -8,7 +8,9 @@ import Control.Exception (throw)
 -- This is only used to be able to parse alsa/pcm.h,
 -- since snd_pcm_format_silence_64 use u_int64_t which is not
 -- defined on 32-bit machines, AFAICT
-#define u_int64_t unsigned long long int
+#if __WORDSIZE == 32
+typedef unsigned long long int u_int64_t;
+#endif
 
 #include <alsa/asoundlib.h>
 
