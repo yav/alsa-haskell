@@ -30,6 +30,14 @@ instance Storable PcmHwParams where
     peek p = fmap PcmHwParams (peek (castPtr p))
     poke p (PcmHwParams r) = poke (castPtr p) r
 
+{#pointer *snd_pcm_sw_params_t as PcmSwParams newtype #}
+
+instance Storable PcmSwParams where
+    sizeOf (PcmSwParams r) = sizeOf r
+    alignment (PcmSwParams r) = alignment r
+    peek p = fmap PcmSwParams (peek (castPtr p))
+    poke p (PcmSwParams r) = poke (castPtr p) r
+
 {#enum _snd_pcm_stream as PcmStream {underscoreToCase} deriving (Eq,Show)#}
 
 {#enum _snd_pcm_access as PcmAccess {underscoreToCase} deriving (Eq,Show)#}
@@ -143,6 +151,14 @@ instance Storable PcmHwParams where
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_set_buffer_size"
 
+{#fun pcm_hw_params_get_buffer_size
+  { id `PcmHwParams',
+    alloca- `Int' peekIntConv*
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_get_buffer_size"
+
+
 {#fun pcm_hw_params_set_periods
   { id `Pcm',
     id `PcmHwParams',
@@ -151,6 +167,30 @@ instance Storable PcmHwParams where
  }
  -> `()' result*- #}
   where result = checkResult_ "pcm_hw_params_set_periods"
+
+{#fun pcm_hw_params_set_buffer_time_near
+  { id `Pcm',
+    id `PcmHwParams',
+    `Int',
+    `Int'
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_set_buffer_time_near"
+
+{#fun pcm_hw_params_get_buffer_time
+  { id `PcmHwParams',
+    alloca- `Int' peekIntConv*,
+    alloca- `Int' peekIntConv*
+ }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_hw_params_get_buffer_time"
+
+{#fun pcm_sw_params_set_xfer_align
+  { id `Pcm',
+    id `PcmSwParams',
+    `Int' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_sw_params_set_xfer_align"
 
 {#fun pcm_readi
   { id `Pcm',
@@ -176,6 +216,27 @@ instance Storable PcmHwParams where
 {#fun pcm_hw_params_free
   { id `PcmHwParams' }
  -> `()' #}
+
+{#fun pcm_sw_params_malloc
+  { alloca- `PcmSwParams' peek* }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_sw_params_malloc"
+
+{#fun pcm_sw_params_free
+  { id `PcmSwParams' }
+ -> `()' #}
+
+{#fun pcm_sw_params
+  { id `Pcm',
+    id `PcmSwParams' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_sw_params"
+
+{#fun pcm_sw_params_current
+  { id `Pcm',
+    id `PcmSwParams' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_sw_params_current"
 
 {#fun strerror
   `Integral a' =>
