@@ -1,4 +1,4 @@
-module Sound.Alsa where
+module Sound.Alsa.Core where
 
 import Sound.Alsa.C2HS
 
