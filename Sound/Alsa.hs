@@ -88,14 +88,15 @@ alsaOpen :: String -- ^ device, e.g @"default"@
 	-> SoundFmt -> PcmStream -> IO Pcm
 alsaOpen dev fmt stream = 
     do h <- pcm_open dev stream 0
-       alsaSetHwParams h $ \h p ->
-           do pcm_hw_params_set_access h p PcmAccessRwInterleaved
-              pcm_hw_params_set_format h p (sampleFmtToPcmFormat (sampleFmt fmt))
-              pcm_hw_params_set_rate h p (sampleFreq fmt) 0
-              pcm_hw_params_set_channels h p (numChannels fmt)
-       alsaSetSwParams h $ \h p ->
-           do -- pcm_sw_params_set_xfer_align h p 1
-	      return ()
+       let buffer_time = 500000 -- 0.5s
+           period_time = 100000 -- 0.1s
+       (buffer_time,buffer_size,period_time,period_size) <- 
+           setHwParams h (sampleFmtToPcmFormat (sampleFmt fmt))
+                         (numChannels fmt)
+                         (sampleFreq fmt)
+                         buffer_time
+                         period_time
+       setSwParams h buffer_size period_size
        pcm_prepare h
        return h
 
@@ -103,20 +104,53 @@ sampleFmtToPcmFormat :: SampleFmt -> PcmFormat
 sampleFmtToPcmFormat SampleFmtLinear16BitSignedLE = PcmFormatS16Le
 sampleFmtToPcmFormat SampleFmtMuLaw8Bit           = PcmFormatMuLaw
 
-alsaSetHwParams :: Pcm -> (Pcm -> PcmHwParams -> IO a) -> IO a
-alsaSetHwParams h f = 
+setHwParams :: Pcm 
+            -> PcmFormat 
+            -> Int -- ^ number of channels
+            -> Int -- ^ sample frequency
+            -> Int -- ^ buffer time
+            -> Int -- ^ period time
+            -> IO (Int,Int,Int,Int) 
+               -- ^ (buffer_time,buffer_size,period_time,period_size)
+setHwParams h format channels rate buffer_time period_time
+  = withHwParams h $ \p ->
+    do pcm_hw_params_set_access h p PcmAccessRwInterleaved
+       pcm_hw_params_set_format h p format
+       pcm_hw_params_set_channels h p channels
+       pcm_hw_params_set_rate h p rate EQ
+       (buffer_time,_) <- 
+           pcm_hw_params_set_buffer_time_near h p buffer_time EQ
+       buffer_size <- pcm_hw_params_get_buffer_size p
+       (period_time,_) <- 
+           pcm_hw_params_set_period_time_near h p period_time EQ
+       (period_size,_) <- pcm_hw_params_get_period_size p
+       return (buffer_time,buffer_size,period_time,period_size)
+
+setSwParams :: Pcm 
+            -> Int -- ^ buffer size 
+            -> Int -- ^ period size
+            -> IO ()
+setSwParams h buffer_size period_size = withSwParams h $ \p -> 
+    do let start_threshold = 
+               (buffer_size `div` period_size) * period_size
+       pcm_sw_params_set_start_threshold h p start_threshold
+       pcm_sw_params_set_avail_min h p period_size
+       pcm_sw_params_set_xfer_align h p 1
+
+withHwParams :: Pcm -> (PcmHwParams -> IO a) -> IO a
+withHwParams h f = 
     do p <- pcm_hw_params_malloc
        pcm_hw_params_any h p
-       x <- f h p
+       x <- f p
        pcm_hw_params h p
        pcm_hw_params_free p
        return x
 
-alsaSetSwParams :: Pcm -> (Pcm -> PcmSwParams -> IO a) -> IO a
-alsaSetSwParams h f = 
+withSwParams :: Pcm -> (PcmSwParams -> IO a) -> IO a
+withSwParams h f = 
     do p <- pcm_sw_params_malloc
        pcm_sw_params_current h p
-       x <- f h p
+       x <- f p
        pcm_sw_params h p
        pcm_sw_params_free p
        return x
