@@ -2,8 +2,10 @@ module Sound.Alsa where
 
 import Sound.Alsa.Core
 
-import Control.Monad
-import Foreign.Ptr (Ptr)
+
+import Control.Exception (bracket)
+import Control.Monad (liftM,when)
+import Foreign
 import System.IO
 
 -- 
@@ -45,6 +47,14 @@ data SoundSink handle =
 --
 --
 
+withSoundSource :: SoundSource h -> (h -> IO a) -> IO a
+withSoundSource source = 
+    bracket (soundSourceOpen source) (soundSourceClose source)
+
+withSoundSink :: SoundSink h -> (h -> IO a) -> IO a
+withSoundSink sink = 
+    bracket (soundSinkOpen sink) (soundSinkClose sink)
+
 soundFmtMIME :: SoundFmt -> String
 soundFmtMIME fmt = t ++ r ++ c
   where t = case sampleFmt fmt of
@@ -79,6 +89,19 @@ soundSinkWriteBytes :: SoundSink h -> h -> Ptr () -> Int -> IO ()
 soundSinkWriteBytes src h buf n = 
 	soundSinkWrite src h buf (n `div` c)
   where c = soundSinkBytesPerFrame src
+
+copySound :: SoundSource h1 
+          -> SoundSink h2 
+          -> Int -- ^ Buffer size to use
+          -> IO ()
+copySound source sink bufSize = 
+    allocaBytes     bufSize $ \buf ->
+    withSoundSource source  $ \from ->
+    withSoundSink   sink    $ \to ->
+       let loop = do n <- soundSourceReadBytes source from buf bufSize
+                     when (n > 0) $ do soundSinkWriteBytes sink to buf n
+                                       loop
+        in loop
 
 --
 -- * Alsa stuff

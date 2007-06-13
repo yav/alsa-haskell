@@ -4,7 +4,7 @@ import Foreign
 import Data.Word
 
 bufSize :: Int
-bufSize = 4096
+bufSize = 1000
 
 inputFormat :: SoundFmt
 inputFormat = SoundFmt {
@@ -15,11 +15,10 @@ inputFormat = SoundFmt {
 
 
 main :: IO ()
-main = 
-    do let src = alsaSoundSource "plughw:0,0" inputFormat
-       h <- soundSourceOpen src
-       allocaArray bufSize $ loop src h bufSize
-       soundSourceClose src h
+main = let source = alsaSoundSource "plughw:0,0" inputFormat
+        in allocaArray     bufSize $ \buf  -> 
+           withSoundSource source  $ \from ->
+               loop source from bufSize buf
 
 -- FIXME: assumes little-endian machine
 loop :: SoundSource h -> h -> Int -> Ptr Int16 -> IO ()

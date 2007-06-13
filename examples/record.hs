@@ -1,21 +1,18 @@
 import Sound.Alsa
 
-import Foreign
-import Data.Word
 import System.Environment
 import System.Exit
 import System.IO
 
 bufSize :: Int
-bufSize = 910
+bufSize = 4096
 
-inputFormat :: SoundFmt
-inputFormat = SoundFmt {
-                sampleFmt   = SampleFmtLinear16BitSignedLE,
-                sampleFreq  = 8000,
-                numChannels = 1
-                }
-
+soundFormat :: SoundFmt
+soundFormat = SoundFmt {
+                        sampleFmt   = SampleFmtLinear16BitSignedLE,
+                        sampleFreq  = 8000,
+                        numChannels = 1
+                       }
 
 main :: IO ()
 main = do args <- getArgs
@@ -26,15 +23,6 @@ main = do args <- getArgs
 
 record :: FilePath -> IO ()
 record file =
-    do let src = alsaSoundSource "plughw:0,0" inputFormat
-       h <- soundSourceOpen src
-       fh <- openBinaryFile file WriteMode
-       allocaBytes bufSize $ loop src h fh bufSize
-       hClose fh
-       soundSourceClose src h
-
-loop :: SoundSource h -> h -> Handle -> Int -> Ptr () -> IO ()
-loop src h fh n buf =
-    do n' <- soundSourceReadBytes src h buf n
-       hPutBuf fh buf n'
-       loop src h fh n buf
+    do let source = alsaSoundSource "plughw:0,0" soundFormat
+           sink   = fileSoundSink file soundFormat
+       copySound source sink bufSize
