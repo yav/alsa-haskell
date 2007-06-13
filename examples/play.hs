@@ -5,7 +5,7 @@ import System.Exit
 import System.IO
 
 bufSize :: Int
-bufSize = 4096
+bufSize = 8192
 
 soundFormat :: SoundFmt
 soundFormat = SoundFmt {
