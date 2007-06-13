@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-all: volume_meter record
+all: volume_meter record play
 
 volume_meter: volume_meter.hs
 	ghc -threaded --make -package alsa -o $@ $<
@@ -8,6 +8,9 @@ volume_meter: volume_meter.hs
 record: record.hs
 	ghc -threaded --make -package alsa -o $@ $<
 
+play: play.hs
+	ghc -threaded --make -package alsa -o $@ $<
+
 clean:
 	-rm -f *o *.hi
-	-rm -f volume_meter record
+	-rm -f volume_meter record play
