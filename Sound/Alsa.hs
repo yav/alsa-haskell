@@ -98,7 +98,9 @@ copySound source sink bufSize =
     allocaBytes     bufSize $ \buf ->
     withSoundSource source  $ \from ->
     withSoundSink   sink    $ \to ->
-       let loop = do n <- soundSourceReadBytes source from buf bufSize
+       let loop = do hPutStrLn stderr $ "Reading " ++ show bufSize ++ " bytes"
+                     n <- soundSourceReadBytes source from buf bufSize
+		     hPutStrLn stderr $ "Read " ++ show n ++ " bytes"
                      when (n > 0) $ do soundSinkWriteBytes sink to buf n
                                        loop
         in loop
