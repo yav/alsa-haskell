@@ -98,9 +98,7 @@ copySound source sink bufSize =
     allocaBytes     bufSize $ \buf ->
     withSoundSource source  $ \from ->
     withSoundSink   sink    $ \to ->
-       let loop = do hPutStrLn stderr $ "Reading " ++ show bufSize ++ " bytes"
-                     n <- soundSourceReadBytes source from buf bufSize
-		     hPutStrLn stderr $ "Read " ++ show n ++ " bytes"
+       let loop = do n <- soundSourceReadBytes source from buf bufSize
                      when (n > 0) $ do soundSinkWriteBytes sink to buf n
                                        loop
         in loop
@@ -185,14 +183,29 @@ withSwParams h f =
        return x
 
 alsaRead :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
-alsaRead _ h buf n = pcm_readi h buf n
+alsaRead fmt h buf n = 
+     do hPutStrLn stderr $ "Reading " ++ show n ++ " samples..."
+        n' <- pcm_readi h buf n
+        hPutStrLn stderr $ "Got " ++ show n' ++ " samples."
+	if n' < n 
+          then do n'' <- alsaRead fmt h (buf `plusPtr` (n' * c)) (n - n')
+	          return (n' + n'')
+          else return n'
+  where c = audioBytesPerFrame fmt
 
 alsaWrite :: SoundFmt -> Pcm -> Ptr () -> Int -> IO ()
-alsaWrite _ h buf n = 
+alsaWrite fmt h buf n = alsaWrite_ fmt h buf n >> return ()
+
+alsaWrite_ :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
+alsaWrite_ fmt h buf n = 
      do hPutStrLn stderr $ "Writing " ++ show n ++ " samples..."
         n' <- pcm_writei h buf n 
-        when (n' /= n) $ hPutStrLn stderr $ "Didn't write all data (" ++ show n' ++ " /= " ++ show n ++ ")"
-	return ()
+        hPutStrLn stderr $ "Wrote " ++ show n' ++ " samples."
+	if (n' /= n)
+            then do n'' <- alsaWrite_ fmt h (buf `plusPtr` (n' * c)) (n - n')
+                    return (n' + n'')
+            else return n'
+  where c = audioBytesPerFrame fmt
 
 alsaClose :: Pcm -> IO ()
 alsaClose pcm = 
