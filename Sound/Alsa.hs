@@ -1,4 +1,24 @@
-module Sound.Alsa where
+module Sound.Alsa 
+    (SampleFmt(..),
+     SampleFreq,
+     SoundFmt(..),
+     SoundSource(..),
+     SoundSink(..),
+     withSoundSource,
+     withSoundSink,
+     soundFmtMIME,
+     audioBytesPerSample,
+     audioBytesPerFrame,
+     soundSourceBytesPerFrame,
+     soundSinkBytesPerFrame,
+     soundSourceReadBytes,
+     soundSinkWriteBytes,
+     copySound,
+     alsaSoundSource,
+     alsaSoundSink,
+     fileSoundSource,
+     fileSoundSink
+    ) where
 
 import Sound.Alsa.Core
 
