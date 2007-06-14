@@ -112,7 +112,7 @@ soundSinkWriteBytes src h buf n =
 
 copySound :: SoundSource h1 
           -> SoundSink h2 
-          -> Int -- ^ Buffer size to use
+          -> Int -- ^ Buffer size (in bytes) to use
           -> IO ()
 copySound source sink bufSize = 
     allocaBytes     bufSize $ \buf ->
