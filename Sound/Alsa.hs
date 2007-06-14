@@ -107,6 +107,9 @@ copySound source sink bufSize =
 -- * Alsa stuff
 --
 
+
+debug = hPutStrLn stderr
+
 alsaOpen :: String -- ^ device, e.g @"default"@
 	-> SoundFmt -> PcmStream -> IO Pcm
 alsaOpen dev fmt stream = 
@@ -121,10 +124,10 @@ alsaOpen dev fmt stream =
                          period_time
        setSwParams h buffer_size period_size
        pcm_prepare h
-       hPutStrLn stderr $ "buffer_time = " ++ show buffer_time
-       hPutStrLn stderr $ "buffer_size = " ++ show buffer_size
-       hPutStrLn stderr $ "period_time = " ++ show period_time
-       hPutStrLn stderr $ "period_size = " ++ show period_size
+       debug $ "buffer_time = " ++ show buffer_time
+       debug $ "buffer_size = " ++ show buffer_size
+       debug $ "period_time = " ++ show period_time
+       debug $ "period_size = " ++ show period_size
        return h
 
 sampleFmtToPcmFormat :: SampleFmt -> PcmFormat
@@ -184,9 +187,9 @@ withSwParams h f =
 
 alsaRead :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
 alsaRead fmt h buf n = 
-     do hPutStrLn stderr $ "Reading " ++ show n ++ " samples..."
+     do --debug $ "Reading " ++ show n ++ " samples..."
         n' <- pcm_readi h buf n
-        hPutStrLn stderr $ "Got " ++ show n' ++ " samples."
+        --debug $ "Got " ++ show n' ++ " samples."
 	if n' < n 
           then do n'' <- alsaRead fmt h (buf `plusPtr` (n' * c)) (n - n')
 	          return (n' + n'')
@@ -198,9 +201,9 @@ alsaWrite fmt h buf n = alsaWrite_ fmt h buf n >> return ()
 
 alsaWrite_ :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
 alsaWrite_ fmt h buf n = 
-     do hPutStrLn stderr $ "Writing " ++ show n ++ " samples..."
+     do --debug $ "Writing " ++ show n ++ " samples..."
         n' <- pcm_writei h buf n 
-        hPutStrLn stderr $ "Wrote " ++ show n' ++ " samples."
+        --debug $ "Wrote " ++ show n' ++ " samples."
 	if (n' /= n)
             then do n'' <- alsaWrite_ fmt h (buf `plusPtr` (n' * c)) (n - n')
                     return (n' + n'')
