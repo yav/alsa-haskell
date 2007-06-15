@@ -24,7 +24,7 @@ module Sound.Alsa
 
 import Sound.Alsa.Core
 
-
+import Control.Concurrent
 import Control.Exception (bracket, bracket_)
 import Control.Monad (liftM,when)
 import Foreign
@@ -163,11 +163,13 @@ copySound source sink bufSize =
 --
 
 
-debug = hPutStrLn stderr
+debug s = 
+    do t <- myThreadId
+       hPutStrLn stderr $ show t ++ ": " ++ s
 
 alsaOpen :: String -- ^ device, e.g @"default"@
 	-> SoundFmt -> PcmStream -> IO Pcm
-alsaOpen dev fmt stream = 
+alsaOpen dev fmt stream = rethrowAlsaExceptions $ 
     do debug "alsaOpen"
        h <- pcm_open dev stream 0
        let buffer_time = 500000 -- 0.5s
@@ -222,6 +224,9 @@ setSwParams h buffer_size period_size = withSwParams h $ \p ->
        pcm_sw_params_set_start_threshold h p start_threshold
        pcm_sw_params_set_avail_min h p period_size
        pcm_sw_params_set_xfer_align h p 1
+       -- pad buffer with silence when needed
+       pcm_sw_params_set_silence_size h p period_size
+       pcm_sw_params_set_silence_threshold h p period_size
 
 withHwParams :: Pcm -> (PcmHwParams -> IO a) -> IO a
 withHwParams h f = 
@@ -242,13 +247,13 @@ withSwParams h f =
        return x
 
 alsaClose :: Pcm -> IO ()
-alsaClose pcm = 
+alsaClose pcm = rethrowAlsaExceptions $ 
     do debug "alsaClose"
        pcm_drain pcm
        pcm_close pcm
 
 alsaStart :: Pcm -> IO ()
-alsaStart pcm = 
+alsaStart pcm = rethrowAlsaExceptions $ 
     do debug "alsaStart"
        pcm_prepare pcm
        pcm_start pcm
@@ -256,35 +261,42 @@ alsaStart pcm =
 
 -- FIXME: use pcm_drain for sinks?
 alsaStop :: Pcm -> IO ()
-alsaStop pcm = 
+alsaStop pcm = rethrowAlsaExceptions $ 
     do debug "alsaStop"
        pcm_drop pcm
 
 alsaRead :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
-alsaRead fmt h buf n = 
+alsaRead fmt h buf n = rethrowAlsaExceptions $ 
      do --debug $ "Reading " ++ show n ++ " samples..."
-        n' <- pcm_readi h buf n
+        n' <- pcm_readi h buf n `catchXRun` handleOverRun
         --debug $ "Got " ++ show n' ++ " samples."
 	if n' < n 
           then do n'' <- alsaRead fmt h (buf `plusPtr` (n' * c)) (n - n')
 	          return (n' + n'')
           else return n'
   where c = audioBytesPerFrame fmt
+        handleOverRun = do debug "snd_pcm_readi reported buffer over-run"
+                           pcm_prepare h
+                           alsaRead fmt h buf n
 
 alsaWrite :: SoundFmt -> Pcm -> Ptr () -> Int -> IO ()
-alsaWrite fmt h buf n = alsaWrite_ fmt h buf n >> return ()
+alsaWrite fmt h buf n = rethrowAlsaExceptions $ 
+    do alsaWrite_ fmt h buf n
+       return ()
 
 alsaWrite_ :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
 alsaWrite_ fmt h buf n = 
      do --debug $ "Writing " ++ show n ++ " samples..."
-        n' <- pcm_writei h buf n 
+        n' <- pcm_writei h buf n `catchXRun` handleUnderRun
         --debug $ "Wrote " ++ show n' ++ " samples."
 	if (n' /= n)
             then do n'' <- alsaWrite_ fmt h (buf `plusPtr` (n' * c)) (n - n')
                     return (n' + n'')
             else return n'
   where c = audioBytesPerFrame fmt
-
+        handleUnderRun = do debug "snd_pcm_writei reported buffer under-run"
+                            pcm_prepare h
+                            alsaWrite_ fmt h buf n
 
 
 alsaSoundSource :: String -> SoundFmt -> SoundSource Pcm
