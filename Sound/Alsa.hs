@@ -7,6 +7,7 @@ module Sound.Alsa
      withSoundSource,
      withSoundSourceRunning,
      withSoundSink,
+     withSoundSinkRunning,
      soundFmtMIME,
      audioBytesPerSample,
      audioBytesPerFrame,
