@@ -65,6 +65,11 @@ instance Storable PcmSwParams where
  -> `()' result*- #}
   where result = checkResult_ "pcm_prepare"
 
+{#fun pcm_start
+  { id `Pcm' }
+ -> `()' result*- #}
+  where result = checkResult_ "pcm_start"
+
 {#fun pcm_drop
   { id `Pcm' }
  -> `()' result*- #}

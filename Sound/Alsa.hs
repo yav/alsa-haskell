@@ -5,6 +5,7 @@ module Sound.Alsa
      SoundSource(..),
      SoundSink(..),
      withSoundSource,
+     withSoundSourceRunning,
      withSoundSink,
      soundFmtMIME,
      audioBytesPerSample,
@@ -23,7 +24,7 @@ module Sound.Alsa
 import Sound.Alsa.Core
 
 
-import Control.Exception (bracket)
+import Control.Exception (bracket, bracket_)
 import Control.Monad (liftM,when)
 import Foreign
 import System.IO
@@ -49,31 +50,64 @@ data SoundFmt = SoundFmt {
 -- | Counts are in samples, not bytes. Multi-channel data is interleaved.
 data SoundSource handle = 
     SoundSource {
-                 soundSourceFmt :: SoundFmt,
-                 soundSourceOpen :: IO handle,
-                 soundSourceRead :: handle -> Ptr () -> Int -> IO Int,
-                 soundSourceClose :: handle -> IO ()
+                 soundSourceFmt   :: SoundFmt,
+                 soundSourceOpen  :: IO handle,
+                 soundSourceClose :: handle -> IO (),
+                 soundSourceStart :: handle -> IO (),
+                 soundSourceStop  :: handle -> IO (),
+                 soundSourceRead  :: handle -> Ptr () -> Int -> IO Int
                 }
 
 data SoundSink handle = 
     SoundSink {
                  soundSinkFmt   :: SoundFmt,
                  soundSinkOpen  :: IO handle,
+                 soundSinkClose :: handle -> IO (),
                  soundSinkWrite :: handle -> Ptr () -> Int -> IO (),
-                 soundSinkClose :: handle -> IO ()
+                 soundSinkStart :: handle -> IO (),
+                 soundSinkStop  :: handle -> IO ()
                 }
 
 --
 --
 --
 
+nullSoundSource :: SoundFmt -> SoundSource h
+nullSoundSource fmt =
+    SoundSource {
+	         soundSourceFmt   = fmt,
+                 soundSourceOpen  = return undefined,
+                 soundSourceClose = \_ -> return (),
+                 soundSourceStart = \_ -> return (),
+                 soundSourceStop  = \_ -> return (),
+                 soundSourceRead  = \_ _ _ -> return 0
+                }
+
+nullSoundSink :: SoundFmt -> SoundSink h
+nullSoundSink fmt = 
+    SoundSink {
+	       soundSinkFmt   = fmt,
+               soundSinkOpen  = return undefined,
+               soundSinkClose = \_ -> return (),
+               soundSinkStart = \_ -> return (),
+               soundSinkStop  = \_ -> return (),
+               soundSinkWrite = \_ _ _ -> return ()
+              }
+
+
 withSoundSource :: SoundSource h -> (h -> IO a) -> IO a
 withSoundSource source = 
     bracket (soundSourceOpen source) (soundSourceClose source)
 
+withSoundSourceRunning :: SoundSource h -> h -> IO a -> IO a
+withSoundSourceRunning src h = bracket_ (soundSourceStart src h) (soundSourceStop src h) 
+
 withSoundSink :: SoundSink h -> (h -> IO a) -> IO a
 withSoundSink sink = 
     bracket (soundSinkOpen sink) (soundSinkClose sink)
+
+withSoundSinkRunning :: SoundSink h -> h -> IO a -> IO a
+withSoundSinkRunning src h = bracket_ (soundSinkStart src h) (soundSinkStop src h) 
 
 soundFmtMIME :: SoundFmt -> String
 soundFmtMIME fmt = t ++ r ++ c
@@ -133,7 +167,8 @@ debug = hPutStrLn stderr
 alsaOpen :: String -- ^ device, e.g @"default"@
 	-> SoundFmt -> PcmStream -> IO Pcm
 alsaOpen dev fmt stream = 
-    do h <- pcm_open dev stream 0
+    do debug "alsaOpen"
+       h <- pcm_open dev stream 0
        let buffer_time = 500000 -- 0.5s
            period_time = 100000 -- 0.1s
        (buffer_time,buffer_size,period_time,period_size) <- 
@@ -205,6 +240,25 @@ withSwParams h f =
        pcm_sw_params_free p
        return x
 
+alsaClose :: Pcm -> IO ()
+alsaClose pcm = 
+    do debug "alsaClose"
+       pcm_drain pcm
+       pcm_close pcm
+
+alsaStart :: Pcm -> IO ()
+alsaStart pcm = 
+    do debug "alsaStart"
+       pcm_prepare pcm
+       pcm_start pcm
+
+
+-- FIXME: use pcm_drain for sinks?
+alsaStop :: Pcm -> IO ()
+alsaStop pcm = 
+    do debug "alsaStop"
+       pcm_drop pcm
+
 alsaRead :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
 alsaRead fmt h buf n = 
      do --debug $ "Reading " ++ show n ++ " samples..."
@@ -230,26 +284,27 @@ alsaWrite_ fmt h buf n =
             else return n'
   where c = audioBytesPerFrame fmt
 
-alsaClose :: Pcm -> IO ()
-alsaClose pcm = 
-	do pcm_drain pcm
-	   pcm_close pcm
+
 
 alsaSoundSource :: String -> SoundFmt -> SoundSource Pcm
-alsaSoundSource dev fmt = SoundSource {
- 		               soundSourceFmt   = fmt,
-                               soundSourceOpen  = alsaOpen dev fmt PcmStreamCapture,
-                               soundSourceRead  = alsaRead fmt,
-                               soundSourceClose = alsaClose
-                              }
+alsaSoundSource dev fmt = 
+    (nullSoundSource fmt) {
+                           soundSourceOpen  = alsaOpen dev fmt PcmStreamCapture,
+                           soundSourceClose = alsaClose,
+                           soundSourceStart = alsaStart,
+                           soundSourceStop  = alsaStop,
+                           soundSourceRead  = alsaRead fmt
+                          }
 
 alsaSoundSink :: String -> SoundFmt -> SoundSink Pcm
-alsaSoundSink dev fmt = SoundSink {
- 		               soundSinkFmt   = fmt,
-                               soundSinkOpen  = alsaOpen dev fmt PcmStreamPlayback,
-                               soundSinkWrite = alsaWrite fmt,
-                               soundSinkClose = alsaClose
-                              }
+alsaSoundSink dev fmt = 
+    (nullSoundSink fmt) {
+                         soundSinkOpen  = alsaOpen dev fmt PcmStreamPlayback,
+                         soundSinkClose = alsaClose,
+                         soundSinkStart = alsaStart,
+                         soundSinkStop  = alsaStop,
+                         soundSinkWrite = alsaWrite fmt
+                        }
 
 --
 -- * File stuff
@@ -263,21 +318,18 @@ fileWrite :: SoundFmt -> Handle -> Ptr () -> Int -> IO ()
 fileWrite fmt h buf n = hPutBuf h buf (n * c)
   where c = audioBytesPerSample fmt
 
--- FIXME: bytes vs sample count
 fileSoundSource :: FilePath -> SoundFmt -> SoundSource Handle
 fileSoundSource file fmt = 
-    SoundSource {
-	         soundSourceFmt   = fmt,
-                 soundSourceOpen  = openBinaryFile file ReadMode,
-                 soundSourceRead  = fileRead fmt,
-                 soundSourceClose = hClose
-                }
+    (nullSoundSource fmt) {
+                           soundSourceOpen  = openBinaryFile file ReadMode,
+                           soundSourceClose = hClose,
+                           soundSourceRead  = fileRead fmt
+                          }
 
 fileSoundSink :: FilePath -> SoundFmt -> SoundSink Handle
 fileSoundSink file fmt = 
-    SoundSink {
-	         soundSinkFmt   = fmt,
-                 soundSinkOpen  = openBinaryFile file WriteMode,
-                 soundSinkWrite = fileWrite fmt,
-                 soundSinkClose = hClose
-                }
+    (nullSoundSink fmt) {
+                         soundSinkOpen  = openBinaryFile file WriteMode,
+                         soundSinkClose = hClose,
+                         soundSinkWrite = fileWrite fmt
+                        }
