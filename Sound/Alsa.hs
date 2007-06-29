@@ -28,6 +28,7 @@ import Control.Concurrent
 import Control.Exception (bracket, bracket_)
 import Control.Monad (liftM,when)
 import Foreign
+import Foreign.C
 import System.IO
 
 -- 
@@ -186,6 +187,10 @@ alsaOpen dev fmt stream = rethrowAlsaExceptions $
        debug $ "buffer_size = " ++ show buffer_size
        debug $ "period_time = " ++ show period_time
        debug $ "period_size = " ++ show period_size
+       when (stream == PcmStreamPlayback) $
+         callocaBytes (audioBytesPerFrame fmt * period_size) $ \buf ->
+	   do pcm_writei h buf period_size
+              return ()
        return h
 
 sampleFmtToPcmFormat :: SampleFmt -> PcmFormat
@@ -346,3 +351,15 @@ fileSoundSink file fmt =
                          soundSinkClose = hClose,
                          soundSinkWrite = fileWrite fmt
                         }
+
+--
+-- * Marshalling utilities
+--
+
+callocaBytes :: Int -> (Ptr a -> IO b) -> IO b
+callocaBytes n f = allocaBytes n (\p -> clearBytes p n >> f p)
+
+clearBytes :: Ptr a -> Int -> IO ()
+clearBytes p n = memset p 0 (fromIntegral n) >> return ()
+
+foreign import ccall unsafe "string.h" memset :: Ptr a -> CInt -> CSize -> IO (Ptr a)
