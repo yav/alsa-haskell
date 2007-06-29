@@ -226,12 +226,13 @@ setSwParams :: Pcm
 setSwParams h buffer_size period_size = withSwParams h $ \p -> 
     do let start_threshold = 
                (buffer_size `div` period_size) * period_size
-       pcm_sw_params_set_start_threshold h p start_threshold
+       --pcm_sw_params_set_start_threshold h p start_threshold
+       pcm_sw_params_set_start_threshold h p 0
        pcm_sw_params_set_avail_min h p period_size
        pcm_sw_params_set_xfer_align h p 1
        -- pad buffer with silence when needed
-       pcm_sw_params_set_silence_size h p period_size
-       pcm_sw_params_set_silence_threshold h p period_size
+       --pcm_sw_params_set_silence_size h p period_size
+       --pcm_sw_params_set_silence_threshold h p period_size
 
 withHwParams :: Pcm -> (PcmHwParams -> IO a) -> IO a
 withHwParams h f = 
@@ -268,7 +269,7 @@ alsaStart pcm = rethrowAlsaExceptions $
 alsaStop :: Pcm -> IO ()
 alsaStop pcm = rethrowAlsaExceptions $ 
     do debug "alsaStop"
-       pcm_drop pcm
+       pcm_drain pcm
 
 alsaRead :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
 alsaRead fmt h buf n = rethrowAlsaExceptions $ 
