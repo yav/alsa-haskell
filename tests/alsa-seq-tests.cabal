@@ -1,0 +1,22 @@
+Name:           alsa-seq-tests
+License:        BSD3
+License-file:   LICENSE
+Version:        0.1
+Author:         Iavor S. Diatchki
+Maintainer:     iavor.diatchki@gmail.com
+Category:       Sound
+Synopsis:       Tests for the ALSA sequencer libraray.
+Build-type:     Simple
+Cabal-Version: >= 1.2
+
+Executable test1
+  main-is: test1.hs
+  Build-Depends:  base, alsa >= 0.2
+
+Executable test2
+  main-is: test2.hs
+  Build-Depends:  base, alsa >= 0.2
+
+Executable test3
+  main-is: test3.hs
+  Build-Depends:  base, alsa >= 0.2

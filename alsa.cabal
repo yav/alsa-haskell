@@ -1,14 +1,27 @@
 Name: alsa
-Version: 0.1
-Copyright: Bjorn Bringert
-Maintainer: bjorn@bringert.net
-Author: Bjorn Bringert
+Version: 0.2
+Copyright: Bjorn Bringert, Iavor S. Diatchki
+Maintainer: bjorn@bringert.net, iavor.diatchki@gmail.com
+Author: Bjorn Bringert, Iavor S. Diatchki
 License: BSD3
-build-depends: base
-Extensions: ForeignFunctionInterface
+License-file:   LICENSE
+build-depends: base, array
+Extensions: ForeignFunctionInterface,
+            GeneralizedNewtypeDeriving,
+            EmptyDataDecls
+
 Synopsis: Binding to the ALSA Library API.
-Ghc-options: 
-Exposed-Modules: Sound.Alsa,Sound.Alsa.Core
-Other-modules: Sound.Alsa.C2HS
+Ghc-options: -O2 -Wall
+Exposed-Modules: Sound.Alsa,
+                 Sound.Alsa.Core,
+                 Sound.Alsa.Sequencer,
+                 Sound.Alsa.Sequencer.Client,
+                 Sound.Alsa.Sequencer.Port
+
+Other-modules: Sound.Alsa.C2HS,
+               Sound.Alsa.Sequencer.Types,
+               Sound.Alsa.Sequencer.Errors,
+               Sound.Alsa.Sequencer.Sequencer
+
 Includes: alsa/asoundlib.h
 Extra-libraries: asound
