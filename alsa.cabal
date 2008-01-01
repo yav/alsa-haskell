@@ -17,6 +17,7 @@ Exposed-Modules: Sound.Alsa,
                  Sound.Alsa.Sequencer,
                  Sound.Alsa.Sequencer.Client,
                  Sound.Alsa.Sequencer.Port
+                 Sound.Alsa.Sequencer.Event
 
 Other-modules: Sound.Alsa.C2HS,
                Sound.Alsa.Sequencer.Types,

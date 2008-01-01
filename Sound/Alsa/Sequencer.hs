@@ -27,18 +27,8 @@ module Sound.Alsa.Sequencer
    -- ** Manage user-space buffers
   , get_output_buffer_size
   , set_output_buffer_size
-  , event_output_pending
-  , drop_output
-  , drop_output_buffer
-
-  , extract_output
-  , remove_output
-
   , get_input_buffer_size
   , set_input_buffer_size
-  , event_input_pending
-  , drop_input
-  , drop_input_buffer
 
   -- ** Manage kernel-space memory pools
   , set_pool_output
@@ -70,13 +60,7 @@ module Sound.Alsa.Sequencer
 
   -- * Events
   , volume_same
-  , event_input
-
-  , event_output
-  , event_output_buffer
-  , event_output_direct
-  , drain_output
-  , sync_output_queue
+  , module Sound.Alsa.Sequencer.Event
 
     -- ** Types
   , RealTime(..)
@@ -111,6 +95,7 @@ import Sound.Alsa.Sequencer.Errors
 import Sound.Alsa.Sequencer.Sequencer
 import Sound.Alsa.Sequencer.Client
 import Sound.Alsa.Sequencer.Port
+import Sound.Alsa.Sequencer.Event
 
 
 
