@@ -1,23 +1,14 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- |
--- Module    : Sound.Alsa.Sequencer.Types
+-- Module    : Sound.Alsa.Sequencer.Errors
 -- Copyright : (c) Iavor S. Diatchki, 2007
 -- License   : BSD3
 --
 -- Maintainer: Iavor S. Diatchki
 -- Stability : provisional
 --
--- PRIVATE MODULE.
---
--- Here we have the various types used by the library,
--- and how they are imported\/exported to C.
---
--- NOTE: In the translations bellow we make the following assumptions
--- about the sizes of C types.
--- CChar  = 8 bits
--- CShort = 16 bit
--- CInt   = 32 bits
+-- Working with errors. TODO: Unify with the rest of the ALSA library.
+--------------------------------------------------------------------------------
 
 module Sound.Alsa.Sequencer.Errors where
 
@@ -25,7 +16,22 @@ import Foreign.C.Types(CInt)
 import Foreign.C.String(CString,peekCString)
 import Control.Exception(throwDyn,catchDyn)
 import Data.Word
-import Sound.Alsa.Sequencer.Types
+import Data.Typeable
+
+data AlsaException = AlsaException
+  { exception_code :: !Word           -- ^ the (positive) error code
+  , exception_description :: !String  -- ^ a text description of the problem
+  }
+
+instance Eq AlsaException where
+  x == y = exception_code x == exception_code y
+
+instance Ord AlsaException where
+  compare x y = compare (exception_code x) (exception_code y)
+
+instance Typeable AlsaException where
+  typeOf _ = mkTyConApp (mkTyCon "Sound.Alsa.Sequencer.AlsaException") []
+
 
 
 -- | Returns the message for an error code.
@@ -40,13 +46,20 @@ alsa_catch :: IO a -> (AlsaException -> IO a) -> IO a
 alsa_catch = catchDyn
 
 check_error :: CInt -> IO Word
-check_error x
-  | x >= 0    = return (fromIntegral x)
-  | otherwise = do msg <- strerror x
-                   throwDyn AlsaException
-                     { exception_code        = fromIntegral (negate x)
-                     , exception_description = msg
-                     }
+check_error = check_error' fromIntegral (const Nothing)
+
+check_error' :: (CInt -> a) -> (CInt -> Maybe a) -> CInt -> IO a
+check_error' ok err x
+  | x >= 0    = return (ok x)
+  | otherwise = case err x of
+                  Just a -> return a
+                  _ -> do msg <- strerror x
+                          throwDyn AlsaException
+                            { exception_code        = fromIntegral (negate x)
+                            , exception_description = msg
+                            }
+
+
 
 check_error_ :: CInt -> IO ()
 check_error_ x = check_error x >> return ()

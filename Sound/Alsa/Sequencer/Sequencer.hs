@@ -1,4 +1,3 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
 {-| PRIVATE MODULE
 Reference:
 <http://www.alsa-project.org/alsa-doc/alsa-lib/group___sequencer.html>
@@ -9,14 +8,13 @@ module Sound.Alsa.Sequencer.Sequencer where
 
 import Foreign.C.Types(CInt,CSize)
 import Foreign.C.String(CString,withCAString,peekCString)
-import Foreign.Ptr(Ptr,nullPtr)
+import Foreign.Ptr(Ptr)
 import Foreign.Marshal.Alloc(alloca)
 import Foreign.Storable
 
 import Data.Word
-import Data.Int
 
-import Sound.Alsa.Sequencer.Types
+import Sound.Alsa.Sequencer.Marshal
 import Sound.Alsa.Sequencer.Errors
 
 
@@ -85,43 +83,6 @@ set_blocking (SndSeq h) m = check_error_ =<< snd_seq_nonblock h(exp_BlockMode m)
 foreign import ccall "alsa/asoundlib.h snd_seq_nonblock"
   snd_seq_nonblock :: Ptr SndSeq_ -> CInt -> IO CInt
 
-
--- Queues ----------------------------------------------------------------------
-
-
--- | Allocate a queue.
-alloc_queue
-  :: SndSeq   -- ^ Sequencer handle.
-  -> IO Queue -- ^ Queue identifier.
-alloc_queue (SndSeq h) =
-  imp_Queue `fmap` (check_error =<< snd_seq_alloc_queue h)
-
-foreign import ccall "alsa/asoundlib.h snd_seq_alloc_queue"
-  snd_seq_alloc_queue :: Ptr SndSeq_ -> IO CInt
-
-
--- | Allocate a queue with the specified name,
-alloc_named_queue
-  :: SndSeq   -- ^ Sequencer handle.
-  -> String   -- ^ Name for the queue.
-  -> IO Queue -- ^ Queue identifier.
-alloc_named_queue (SndSeq h) x = withCAString x $ \s ->
-  imp_Queue `fmap` (check_error =<< snd_seq_alloc_named_queue h s)
-
-foreign import ccall "alsa/asoundlib.h snd_seq_alloc_named_queue"
-  snd_seq_alloc_named_queue :: Ptr SndSeq_ -> CString -> IO CInt
-
-
--- | Delete the specified queue.
-free_queue
-  :: SndSeq   -- ^ Sequencer handle.
-  -> Queue    -- ^ Queue identifier.
-  -> IO ()
-free_queue (SndSeq h) q =
-  check_error_ =<< snd_seq_free_queue h (exp_Queue q)
-
-foreign import ccall "alsa/asoundlib.h snd_seq_free_queue"
-  snd_seq_free_queue :: Ptr SndSeq_ -> CInt -> IO CInt
 
 
 -- Buffers ---------------------------------------------------------------------

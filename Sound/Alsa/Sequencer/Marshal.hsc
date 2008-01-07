@@ -1,8 +1,6 @@
-{-# LANGUAGE ForeignFunctionInterface, GeneralizedNewtypeDeriving,
-             EmptyDataDecls #-}
------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- |
--- Module    : Sound.Alsa.Sequencer.Types
+-- Module    : Sound.Alsa.Sequencer.Marshal
 -- Copyright : (c) Iavor S. Diatchki, 2007
 -- License   : BSD3
 --
@@ -19,14 +17,14 @@
 -- CChar  = 8 bits
 -- CShort = 16 bit
 -- CInt   = 32 bits
+--------------------------------------------------------------------------------
 
-module Sound.Alsa.Sequencer.Types where
+module Sound.Alsa.Sequencer.Marshal where
 
 #include <alsa/asoundlib.h>
 import Foreign
 import Foreign.C.Types
 import Data.Word
-import Data.Typeable
 import Data.Array
 
 -- | Read\/Write permissions for the sequencer device.
@@ -619,20 +617,5 @@ data EventData
   | ConnEv ConnEv Connect
   | EmptyEv EmptyEv
     deriving Show
-
-
-data AlsaException = AlsaException
-  { exception_code :: !Word           -- ^ the (positive) error code
-  , exception_description :: !String  -- ^ a text description of the problem
-  }
-
-instance Eq AlsaException where
-  x == y = exception_code x == exception_code y
-
-instance Ord AlsaException where
-  compare x y = compare (exception_code x) (exception_code y)
-
-instance Typeable AlsaException where
-  typeOf _ = mkTyConApp (mkTyCon "Sound.Alsa.Sequencer.AlsaException") []
 
 

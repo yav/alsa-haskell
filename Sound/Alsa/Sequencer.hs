@@ -39,11 +39,7 @@ module Sound.Alsa.Sequencer
 
 
   -- * Queue Interface
-  , Queue
-  , queue_direct
-  , alloc_queue
-  , alloc_named_queue
-  , free_queue
+  , module Sound.Alsa.Sequencer.Queue
 
   -- * Client Interface
   , module Sound.Alsa.Sequencer.Client
@@ -90,12 +86,13 @@ module Sound.Alsa.Sequencer
 import Data.Word
 import Data.Int
 
-import Sound.Alsa.Sequencer.Types
+import Sound.Alsa.Sequencer.Marshal
 import Sound.Alsa.Sequencer.Errors
 import Sound.Alsa.Sequencer.Sequencer
 import Sound.Alsa.Sequencer.Client
 import Sound.Alsa.Sequencer.Port
 import Sound.Alsa.Sequencer.Event
+import Sound.Alsa.Sequencer.Queue
 
 
 

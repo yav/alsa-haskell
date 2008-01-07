@@ -20,3 +20,11 @@ Executable test2
 Executable test3
   main-is: test3.hs
   Build-Depends:  base, alsa >= 0.2
+
+Executable test4
+  main-is: test4.hs
+  Build-Depends:  base, alsa >= 0.2
+
+Executable test5
+  main-is: test5.hs
+  Build-Depends:  base, alsa >= 0.2

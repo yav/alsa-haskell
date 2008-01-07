@@ -1,5 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-----------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- |
 -- Module    : Sound.Alsa.Sequencer.Event
 -- Copyright : (c) Iavor S. Diatchki, 2007
@@ -11,6 +10,7 @@
 -- This module contains functions for working with events.
 -- Reference:
 -- <http://www.alsa-project.org/alsa-doc/alsa-lib/group___seq_event.html>
+--------------------------------------------------------------------------------
 
 module Sound.Alsa.Sequencer.Event
   ( sync_output_queue     -- :: SndSeq -> IO ()
@@ -38,7 +38,7 @@ import Foreign.Storable
 import Data.Word
 import Data.Int
 
-import Sound.Alsa.Sequencer.Types
+import Sound.Alsa.Sequencer.Marshal
 import Sound.Alsa.Sequencer.Errors
 
 
