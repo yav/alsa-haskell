@@ -6,14 +6,13 @@ Author: Bjorn Bringert, Iavor S. Diatchki
 License: BSD3
 License-file:   LICENSE
 build-depends: base, array
-Extensions: ForeignFunctionInterface,
-            GeneralizedNewtypeDeriving,
-            EmptyDataDecls
+Extensions: ForeignFunctionInterface, GeneralizedNewtypeDeriving, EmptyDataDecls
 
 Synopsis: Binding to the ALSA Library API.
 Ghc-options: -O2 -Wall
 Exposed-Modules: Sound.Alsa,
                  Sound.Alsa.Core,
+                 Sound.Alsa.Error,
                  Sound.Alsa.Sequencer,
                  Sound.Alsa.Sequencer.Client,
                  Sound.Alsa.Sequencer.Port
