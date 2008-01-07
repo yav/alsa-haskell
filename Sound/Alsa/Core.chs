@@ -2,10 +2,9 @@
 module Sound.Alsa.Core where
 
 import Sound.Alsa.C2HS
+import Sound.Alsa.Error
 
-import Control.Exception (catchDyn,throwDyn)
-import Data.Typeable
-import System.IO.Unsafe
+
 
 -- HACK for 32-bit machines.
 -- This is only used to be able to parse alsa/pcm.h,
@@ -48,10 +47,6 @@ instance Storable PcmSwParams where
 {#enum _snd_pcm_access as PcmAccess {underscoreToCase} deriving (Eq,Show)#}
 
 {#enum _snd_pcm_format as PcmFormat {underscoreToCase} deriving (Eq,Show)#}
-
-
-data AlsaException = AlsaException String Errno
-  deriving (Typeable)
 
 {#fun pcm_open
   { alloca- `Pcm' peek*,
@@ -296,53 +291,6 @@ data AlsaException = AlsaException String Errno
     id `PcmSwParams' }
  -> `()' result*- #}
   where result = checkResult_ "pcm_sw_params_current"
-
-{#fun strerror
-  `Integral a' =>
-  { cIntConv `a' }
- -> `String' peekCString* #}
-
---
--- * Error handling
---
-
-checkResult :: Integral a => String -> a -> IO a
-checkResult f r | r < 0 = throwAlsa ("snd_"++f) (Errno (negate (fromIntegral r)))
-                | otherwise = return r
-
-checkResult_ :: Integral a => String -> a -> IO ()
-checkResult_ f r = checkResult f r >> return ()
-
-throwAlsa :: String -> Errno -> IO a
-throwAlsa fun err = throwDyn (AlsaException fun err)
-
-catchAlsa :: IO a -> (AlsaException -> IO a) -> IO a
-catchAlsa = catchDyn
-
-catchAlsaErrno :: Errno 
-               -> IO a -- ^ Action
-               -> IO a -- ^ Handler
-               -> IO a
-catchAlsaErrno e x h = 
-    catchAlsa x (\ex@(AlsaException _ err) -> if err == e then h else throwDyn ex)
-
-catchXRun :: IO a -- ^ Action
-          -> IO a -- ^ Handler
-          -> IO a
-catchXRun = catchAlsaErrno ePIPE
-
-showAlsaException :: AlsaException -> String
-showAlsaException (AlsaException fun (Errno errno)) = 
-    unsafePerformIO $ do str <- strerror (negate errno)
-                         return $ fun ++ ": " ++ str
-
--- | Converts any 'AlsaException' into an 'IOError'.
--- This produces better a error message than letting an uncaught
--- 'AlsaException' propagate to the top.
-rethrowAlsaExceptions :: IO a -> IO a
-rethrowAlsaExceptions x = 
-    catchAlsa x $ \ (AlsaException fun errno) ->
-       ioError (errnoToIOError fun errno Nothing Nothing)
 
 --
 -- * Marshalling utilities

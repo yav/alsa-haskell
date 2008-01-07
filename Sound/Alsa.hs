@@ -23,6 +23,7 @@ module Sound.Alsa
     ) where
 
 import Sound.Alsa.Core
+import Sound.Alsa.Error
 
 import Control.Concurrent
 import Control.Exception (bracket, bracket_)
