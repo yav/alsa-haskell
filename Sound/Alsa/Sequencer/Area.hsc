@@ -228,5 +228,17 @@ y"_set_"z" i c =\n"
 #area "QueueTimer",  "queue_timer"
 
 
+-- RO
+#{get_int "QueueTimer", "queue_timer", "queue",
+           "Queue","(imp_Queue . fromIntegral)"}
 
+-- RW
+
+#{get_int "QueueTimer", "queue_timer", "type",
+                                  "QueueTimerType", "imp_QueueTimerType"}
+#{set_int "QueueTimer", "queue_timer", "type",
+                                  "QueueTimerType", "exp_QueueTimerType"}
+
+#{get_int "QueueTimer", "queue_timer", "resolution", "Word", "fromIntegral"}
+#{set_int "QueueTimer", "queue_timer", "resolution", "Word", "fromIntegral"}
 

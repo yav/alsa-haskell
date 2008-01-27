@@ -148,7 +148,22 @@ exp_Queue (Queue x) = fromIntegral x
  , queue_direct = SND_SEQ_QUEUE_DIRECT
  }
 
+data QueueTimerType = TimerAlsa
+                    | TimerMidiClock
+                    | TimerMidiTick
 
+exp_QueueTimerType :: QueueTimerType -> CInt
+exp_QueueTimerType t  = case t of
+  TimerAlsa       -> #{const SND_SEQ_TIMER_ALSA}
+  TimerMidiClock  -> #{const SND_SEQ_TIMER_MIDI_CLOCK}
+  TimerMidiTick   -> #{const SND_SEQ_TIMER_MIDI_TICK}
+
+imp_QueueTimerType :: CInt -> QueueTimerType
+imp_QueueTimerType t  = case t of
+  #{const SND_SEQ_TIMER_ALSA}         -> TimerAlsa
+  #{const SND_SEQ_TIMER_MIDI_CLOCK}   -> TimerMidiClock
+  #{const SND_SEQ_TIMER_MIDI_TICK}    -> TimerMidiTick
+  _ -> error ("imp_QueueTimerType: unknown timer type (" ++ show t ++ ")")
 
 
 -- The type of client ports.
