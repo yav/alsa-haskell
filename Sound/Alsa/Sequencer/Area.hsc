@@ -115,6 +115,7 @@ y"_set_"z" i c =\n"
 
 
 
+-- Client Info -----------------------------------------------------------------
 #area "ClientInfo",  "client_info"
 
 -- read/write
@@ -135,6 +136,7 @@ y"_set_"z" i c =\n"
           "Word", "fromIntegral"}
 
 
+-- Port Info -------------------------------------------------------------------
 #area "PortInfo",    "port_info"
 
 -- read/write
@@ -181,7 +183,7 @@ y"_set_"z" i c =\n"
 #{get_int "PortInfo", "port_info", "write_use",
           "Word","fromIntegral"}
 
-
+-- Queue Info ------------------------------------------------------------------
 #area "QueueInfo",   "queue_info"
 #get_set_name "QueueInfo", "queue_info"
 #get_set_bool "QueueInfo", "queue_info", "locked"
@@ -195,8 +197,34 @@ y"_set_"z" i c =\n"
 #{set_int "QueueInfo", "queue_info", "flags",
           "Word", "fromIntegral"}
 
+-- RO
+#{get_int "QueueInfo", "queue_info", "queue",
+           "Queue","(imp_Queue . fromIntegral)"}
+
+-- Queue Status ----------------------------------------------------------------
 #area "QueueStatus", "queue_status"
+
+-- Queue Tempo -----------------------------------------------------------------
 #area "QueueTempo",  "queue_tempo"
+
+-- RO
+#{get_int "QueueTempo", "queue_tempo", "queue",
+           "Queue","(imp_Queue . fromIntegral)"}
+
+-- RW
+#{get_int "QueueTempo", "queue_tempo", "tempo", "Word", "fromIntegral"}
+#{set_int "QueueTempo", "queue_tempo", "tempo", "Word", "fromIntegral"}
+
+#{get_int "QueueTempo", "queue_tempo", "ppq", "Int", "fromIntegral"}
+#{set_int "QueueTempo", "queue_tempo", "ppq", "Int", "fromIntegral"}
+
+#{get_int "QueueTempo", "queue_tempo", "skew", "Word", "fromIntegral"}
+#{set_int "QueueTempo", "queue_tempo", "skew", "Word", "fromIntegral"}
+
+#{get_int "QueueTempo", "queue_tempo", "skew_base", "Word", "fromIntegral"}
+#{set_int "QueueTempo", "queue_tempo", "skew_base", "Word", "fromIntegral"}
+
+-- Queue Timer -----------------------------------------------------------------
 #area "QueueTimer",  "queue_timer"
 
 

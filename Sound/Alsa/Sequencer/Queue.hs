@@ -25,6 +25,7 @@ module Sound.Alsa.Sequencer.Queue
   , queue_info_copy
   , queue_info_clone
 
+  , queue_info_get_queue
   , queue_info_get_name
   , queue_info_get_locked
   , queue_info_get_owner
@@ -46,6 +47,16 @@ module Sound.Alsa.Sequencer.Queue
   , queue_tempo_copy
   , queue_tempo_clone
 
+  , queue_tempo_get_queue
+  , queue_tempo_get_tempo
+  , queue_tempo_get_ppq
+  , queue_tempo_get_skew
+  , queue_tempo_get_skew_base
+
+  , queue_tempo_set_tempo
+  , queue_tempo_set_ppq
+  , queue_tempo_set_skew
+  , queue_tempo_set_skew_base
 
   -- * Queue Timer
   , QueueTimer
