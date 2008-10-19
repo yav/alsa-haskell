@@ -251,6 +251,7 @@ data Instr          = Instr { instr_cluster :: !InstrCluster
                             , instr_prg     :: !Word16
                             } deriving (Show)
 
+{-
 instance Storable Instr where
   sizeOf _    = #{size snd_seq_instr_t}
   alignment _ = 4 -- XXX
@@ -267,7 +268,7 @@ instance Storable Instr where
              >> #{poke snd_seq_instr_t, std}     p (instr_std v)
              >> #{poke snd_seq_instr_t, bank}    p (instr_bank v)
              >> #{poke snd_seq_instr_t, prg}     p (instr_prg v)
-
+-}
 
 
 data Note           = Note { note_channel      :: !Word8
@@ -325,6 +326,7 @@ data Sample         = Sample { sample_std  :: !Word32
                              , sample_prg  :: !Word16
                              } deriving (Show)
 
+{-
 instance Storable Sample where
   sizeOf _    = #{size snd_seq_ev_sample_t}
   alignment _ = 4 -- XXX
@@ -338,6 +340,7 @@ instance Storable Sample where
   poke p v    = #{poke snd_seq_ev_sample_t, std}     p (sample_std v)
              >> #{poke snd_seq_ev_sample_t, bank}    p (sample_bank v)
              >> #{poke snd_seq_ev_sample_t, prg}     p (sample_prg v)
+-}
 
 
 newtype Cluster     = Cluster { cluster_cluster :: InstrCluster
@@ -351,7 +354,7 @@ data Volume         = Volume { volume_volume  :: !Int16
                              , volume_du      :: !Int16
                              } deriving (Show)
 
-
+{-
 instance Storable Volume where
   sizeOf _    = #{size snd_seq_ev_volume_t}
   alignment _ = 4 -- XXX
@@ -368,7 +371,7 @@ instance Storable Volume where
              >> #{poke snd_seq_ev_volume_t, lr}     p (volume_lr v)
              >> #{poke snd_seq_ev_volume_t, fr}     p (volume_fr v)
              >> #{poke snd_seq_ev_volume_t, du}     p (volume_du v)
-
+-}
 
 
 data Event          = Event { ev_high_priority  :: !Bool
@@ -485,7 +488,7 @@ peek_event_data = accumArray (const id) unknown (0,255)
   , (#{const SND_SEQ_EVENT_PORT_SUBSCRIBED},   peek_conn_ev PortSubscribed)
   , (#{const SND_SEQ_EVENT_PORT_UNSUBSCRIBED}, peek_conn_ev PortUnsubscribed)
 
-
+{-
   , (#{const SND_SEQ_EVENT_SAMPLE}, unknown)
   , (#{const SND_SEQ_EVENT_SAMPLE_CLUSTER}, unknown)
   , (#{const SND_SEQ_EVENT_SAMPLE_START}, unknown)
@@ -495,7 +498,7 @@ peek_event_data = accumArray (const id) unknown (0,255)
   , (#{const SND_SEQ_EVENT_SAMPLE_LOOP}, unknown)
   , (#{const SND_SEQ_EVENT_SAMPLE_POSITION}, unknown)
   , (#{const SND_SEQ_EVENT_SAMPLE_PRIVATE1}, unknown)
-
+-}
   , (#{const SND_SEQ_EVENT_USR0}, unknown)
   , (#{const SND_SEQ_EVENT_USR1}, unknown)
   , (#{const SND_SEQ_EVENT_USR2}, unknown)
@@ -507,6 +510,7 @@ peek_event_data = accumArray (const id) unknown (0,255)
   , (#{const SND_SEQ_EVENT_USR8}, unknown)
   , (#{const SND_SEQ_EVENT_USR9}, unknown)
 
+{-
   , (#{const SND_SEQ_EVENT_INSTR_BEGIN}, unknown)
   , (#{const SND_SEQ_EVENT_INSTR_END}, unknown)
   , (#{const SND_SEQ_EVENT_INSTR_INFO}, unknown)
@@ -526,6 +530,7 @@ peek_event_data = accumArray (const id) unknown (0,255)
   , (#{const SND_SEQ_EVENT_INSTR_CLUSTER_GET}, unknown)
   , (#{const SND_SEQ_EVENT_INSTR_CLUSTER_RESULT}, unknown)
   , (#{const SND_SEQ_EVENT_INSTR_CHANGE}, unknown)
+-}
 
   , (#{const SND_SEQ_EVENT_SYSEX}, unknown)
   , (#{const SND_SEQ_EVENT_BOUNCE}, unknown)
