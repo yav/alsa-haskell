@@ -7,6 +7,7 @@ License: BSD3
 License-file:   LICENSE
 build-depends: base, array
 Extensions: ForeignFunctionInterface, GeneralizedNewtypeDeriving, EmptyDataDecls
+Build-Type: Simple
 
 Synopsis: Binding to the ALSA Library API.
 Ghc-options: -O2 -Wall
