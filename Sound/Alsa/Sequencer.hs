@@ -15,7 +15,11 @@
 module Sound.Alsa.Sequencer
   ( -- * Sequencer
     SndSeq
-  , OpenMode(..)
+  , OpenMode
+  , open_output
+  , open_input
+  , open_duplex
+
   , BlockMode(..)
 
   , open

@@ -3,7 +3,7 @@ import Sound.Alsa.Sequencer
 main :: IO ()
 main =
   do putStrLn "Starting."
-     h <- open default_seq_name OpenInput Block
+     h <- open default_seq_name open_input Block
      set_client_name h "HS1"
      putStrLn "Created sequencer."
      p1 <- create_simple_port h "one"

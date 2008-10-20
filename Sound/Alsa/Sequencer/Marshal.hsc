@@ -27,18 +27,18 @@ import Foreign.C.Types
 import Data.Word
 import Data.Array
 
+
 -- | Read\/Write permissions for the sequencer device.
-data OpenMode       = OpenOutput  -- ^ Open for writing.
-                    | OpenInput   -- ^ Open for reading.
-                    | OpenDuplex  -- ^ Open for both reading and writing.
-                      deriving (Show,Eq)
+newtype OpenMode = OpenMode CInt deriving (Show,Eq,Ord,Storable)
+
+#{enum OpenMode, OpenMode
+  , open_output  = SND_SEQ_OPEN_OUTPUT
+  , open_input   = SND_SEQ_OPEN_INPUT
+  , open_duplex  = SND_SEQ_OPEN_DUPLEX
+  }
 
 exp_OpenMode       :: OpenMode -> CInt
-exp_OpenMode x      = case x of
-  OpenOutput  -> #{const SND_SEQ_OPEN_OUTPUT}
-  OpenInput   -> #{const SND_SEQ_OPEN_INPUT}
-  OpenDuplex  -> #{const SND_SEQ_OPEN_DUPLEX}
-
+exp_OpenMode (OpenMode x) = x
 
 -- | Blocking behavior of the sequencer device.
 data BlockMode      = Block     -- ^ Operations may block.
