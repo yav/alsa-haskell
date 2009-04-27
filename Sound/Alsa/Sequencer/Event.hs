@@ -71,7 +71,7 @@ foreign import ccall "alsa/asoundlib.h snd_seq_event_input"
 
 
 -- | Returns the number of events in the input buffer.
--- If the input buffer is empty and the boolean argumen is true,
+-- If the input buffer is empty and the boolean argument is true,
 -- then try to fill the input buffer with data from the sequencer queue.
 -- See also: 'snd_seq_event_input'.
 
@@ -87,8 +87,8 @@ foreign import ccall "alsa/asoundlib.h snd_seq_event_input_pending"
 
 
 
--- | Output an event and dain the buffer, if it bacame full.
--- Thorws exceptions.
+-- | Output an event and drain the buffer, if it became full.
+-- Throws exceptions.
 -- See also: 'event_output_direct', 'event_output_buffer',
 --           'event_output_pending', 'drain_output', 'drop_output',
 --           'extract_output', 'remove_events'
