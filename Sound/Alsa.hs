@@ -1,4 +1,4 @@
-module Sound.Alsa 
+module Sound.Alsa
     (SampleFmt(..),
      SampleFreq,
      SoundFmt(..),
@@ -32,7 +32,7 @@ import Foreign
 import Foreign.C
 import System.IO
 
--- 
+--
 -- * Generic sound API
 --
 
@@ -51,7 +51,7 @@ data SoundFmt = SoundFmt {
 
 
 -- | Counts are in samples, not bytes. Multi-channel data is interleaved.
-data SoundSource handle = 
+data SoundSource handle =
     SoundSource {
                  soundSourceFmt   :: SoundFmt,
                  soundSourceOpen  :: IO handle,
@@ -61,7 +61,7 @@ data SoundSource handle =
                  soundSourceRead  :: handle -> Ptr () -> Int -> IO Int
                 }
 
-data SoundSink handle = 
+data SoundSink handle =
     SoundSink {
                  soundSinkFmt   :: SoundFmt,
                  soundSinkOpen  :: IO handle,
@@ -87,7 +87,7 @@ nullSoundSource fmt =
                 }
 
 nullSoundSink :: SoundFmt -> SoundSink h
-nullSoundSink fmt = 
+nullSoundSink fmt =
     SoundSink {
 	       soundSinkFmt   = fmt,
                soundSinkOpen  = return undefined,
@@ -99,18 +99,18 @@ nullSoundSink fmt =
 
 
 withSoundSource :: SoundSource h -> (h -> IO a) -> IO a
-withSoundSource source = 
+withSoundSource source =
     bracket (soundSourceOpen source) (soundSourceClose source)
 
 withSoundSourceRunning :: SoundSource h -> h -> IO a -> IO a
-withSoundSourceRunning src h = bracket_ (soundSourceStart src h) (soundSourceStop src h) 
+withSoundSourceRunning src h = bracket_ (soundSourceStart src h) (soundSourceStop src h)
 
 withSoundSink :: SoundSink h -> (h -> IO a) -> IO a
-withSoundSink sink = 
+withSoundSink sink =
     bracket (soundSinkOpen sink) (soundSinkClose sink)
 
 withSoundSinkRunning :: SoundSink h -> h -> IO a -> IO a
-withSoundSinkRunning src h = bracket_ (soundSinkStart src h) (soundSinkStop src h) 
+withSoundSinkRunning src h = bracket_ (soundSinkStart src h) (soundSinkStop src h)
 
 soundFmtMIME :: SoundFmt -> String
 soundFmtMIME fmt = t ++ r ++ c
@@ -122,7 +122,7 @@ soundFmtMIME fmt = t ++ r ++ c
 	  | otherwise = ";channels=" ++ show (numChannels fmt)
 
 audioBytesPerSample :: SoundFmt -> Int
-audioBytesPerSample fmt = 
+audioBytesPerSample fmt =
 	case sampleFmt fmt of
 		SampleFmtLinear16BitSignedLE -> 2
 		SampleFmtMuLaw8Bit           -> 1
@@ -138,20 +138,20 @@ soundSinkBytesPerFrame :: SoundSink h -> Int
 soundSinkBytesPerFrame = audioBytesPerFrame . soundSinkFmt
 
 soundSourceReadBytes :: SoundSource h -> h -> Ptr () -> Int -> IO Int
-soundSourceReadBytes src h buf n = 
+soundSourceReadBytes src h buf n =
 	liftM (* c) $ soundSourceRead src h buf (n `div` c)
   where c = soundSourceBytesPerFrame src
 
 soundSinkWriteBytes :: SoundSink h -> h -> Ptr () -> Int -> IO ()
-soundSinkWriteBytes src h buf n = 
+soundSinkWriteBytes src h buf n =
 	soundSinkWrite src h buf (n `div` c)
   where c = soundSinkBytesPerFrame src
 
-copySound :: SoundSource h1 
-          -> SoundSink h2 
+copySound :: SoundSource h1
+          -> SoundSink h2
           -> Int -- ^ Buffer size (in bytes) to use
           -> IO ()
-copySound source sink bufSize = 
+copySound source sink bufSize =
     allocaBytes     bufSize $ \buf ->
     withSoundSource source  $ \from ->
     withSoundSink   sink    $ \to ->
@@ -165,18 +165,18 @@ copySound source sink bufSize =
 --
 
 
-debug s = 
+debug s =
     do t <- myThreadId
        hPutStrLn stderr $ show t ++ ": " ++ s
 
 alsaOpen :: String -- ^ device, e.g @"default"@
 	-> SoundFmt -> PcmStream -> IO Pcm
-alsaOpen dev fmt stream = rethrowAlsaExceptions $ 
+alsaOpen dev fmt stream = rethrowAlsaExceptions $
     do debug "alsaOpen"
        h <- pcm_open dev stream 0
        let buffer_time = 500000 -- 0.5s
            period_time = 100000 -- 0.1s
-       (buffer_time,buffer_size,period_time,period_size) <- 
+       (buffer_time,buffer_size,period_time,period_size) <-
            setHwParams h (sampleFmtToPcmFormat (sampleFmt fmt))
                          (numChannels fmt)
                          (sampleFreq fmt)
@@ -198,13 +198,13 @@ sampleFmtToPcmFormat :: SampleFmt -> PcmFormat
 sampleFmtToPcmFormat SampleFmtLinear16BitSignedLE = PcmFormatS16Le
 sampleFmtToPcmFormat SampleFmtMuLaw8Bit           = PcmFormatMuLaw
 
-setHwParams :: Pcm 
-            -> PcmFormat 
+setHwParams :: Pcm
+            -> PcmFormat
             -> Int -- ^ number of channels
             -> Int -- ^ sample frequency
             -> Int -- ^ buffer time
             -> Int -- ^ period time
-            -> IO (Int,Int,Int,Int) 
+            -> IO (Int,Int,Int,Int)
                -- ^ (buffer_time,buffer_size,period_time,period_size)
 setHwParams h format channels rate buffer_time period_time
   = withHwParams h $ \p ->
@@ -212,20 +212,20 @@ setHwParams h format channels rate buffer_time period_time
        pcm_hw_params_set_format h p format
        pcm_hw_params_set_channels h p channels
        pcm_hw_params_set_rate h p rate EQ
-       (buffer_time,_) <- 
+       (buffer_time,_) <-
            pcm_hw_params_set_buffer_time_near h p buffer_time EQ
        buffer_size <- pcm_hw_params_get_buffer_size p
-       (period_time,_) <- 
+       (period_time,_) <-
            pcm_hw_params_set_period_time_near h p period_time EQ
        (period_size,_) <- pcm_hw_params_get_period_size p
        return (buffer_time,buffer_size,period_time,period_size)
 
-setSwParams :: Pcm 
-            -> Int -- ^ buffer size 
+setSwParams :: Pcm
+            -> Int -- ^ buffer size
             -> Int -- ^ period size
             -> IO ()
-setSwParams h buffer_size period_size = withSwParams h $ \p -> 
-    do let start_threshold = 
+setSwParams h buffer_size period_size = withSwParams h $ \p ->
+    do let start_threshold =
                (buffer_size `div` period_size) * period_size
        --pcm_sw_params_set_start_threshold h p start_threshold
        pcm_sw_params_set_start_threshold h p 0
@@ -236,7 +236,7 @@ setSwParams h buffer_size period_size = withSwParams h $ \p ->
        --pcm_sw_params_set_silence_threshold h p period_size
 
 withHwParams :: Pcm -> (PcmHwParams -> IO a) -> IO a
-withHwParams h f = 
+withHwParams h f =
     do p <- pcm_hw_params_malloc
        pcm_hw_params_any h p
        x <- f p
@@ -245,7 +245,7 @@ withHwParams h f =
        return x
 
 withSwParams :: Pcm -> (PcmSwParams -> IO a) -> IO a
-withSwParams h f = 
+withSwParams h f =
     do p <- pcm_sw_params_malloc
        pcm_sw_params_current h p
        x <- f p
@@ -254,13 +254,13 @@ withSwParams h f =
        return x
 
 alsaClose :: Pcm -> IO ()
-alsaClose pcm = rethrowAlsaExceptions $ 
+alsaClose pcm = rethrowAlsaExceptions $
     do debug "alsaClose"
        pcm_drain pcm
        pcm_close pcm
 
 alsaStart :: Pcm -> IO ()
-alsaStart pcm = rethrowAlsaExceptions $ 
+alsaStart pcm = rethrowAlsaExceptions $
     do debug "alsaStart"
        pcm_prepare pcm
        pcm_start pcm
@@ -268,16 +268,16 @@ alsaStart pcm = rethrowAlsaExceptions $
 
 -- FIXME: use pcm_drain for sinks?
 alsaStop :: Pcm -> IO ()
-alsaStop pcm = rethrowAlsaExceptions $ 
+alsaStop pcm = rethrowAlsaExceptions $
     do debug "alsaStop"
        pcm_drain pcm
 
 alsaRead :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
-alsaRead fmt h buf n = rethrowAlsaExceptions $ 
+alsaRead fmt h buf n = rethrowAlsaExceptions $
      do --debug $ "Reading " ++ show n ++ " samples..."
         n' <- pcm_readi h buf n `catchXRun` handleOverRun
         --debug $ "Got " ++ show n' ++ " samples."
-	if n' < n 
+	if n' < n
           then do n'' <- alsaRead fmt h (buf `plusPtr` (n' * c)) (n - n')
 	          return (n' + n'')
           else return n'
@@ -287,12 +287,12 @@ alsaRead fmt h buf n = rethrowAlsaExceptions $
                            alsaRead fmt h buf n
 
 alsaWrite :: SoundFmt -> Pcm -> Ptr () -> Int -> IO ()
-alsaWrite fmt h buf n = rethrowAlsaExceptions $ 
+alsaWrite fmt h buf n = rethrowAlsaExceptions $
     do alsaWrite_ fmt h buf n
        return ()
 
 alsaWrite_ :: SoundFmt -> Pcm -> Ptr () -> Int -> IO Int
-alsaWrite_ fmt h buf n = 
+alsaWrite_ fmt h buf n =
      do --debug $ "Writing " ++ show n ++ " samples..."
         n' <- pcm_writei h buf n `catchXRun` handleUnderRun
         --debug $ "Wrote " ++ show n' ++ " samples."
@@ -307,7 +307,7 @@ alsaWrite_ fmt h buf n =
 
 
 alsaSoundSource :: String -> SoundFmt -> SoundSource Pcm
-alsaSoundSource dev fmt = 
+alsaSoundSource dev fmt =
     (nullSoundSource fmt) {
                            soundSourceOpen  = alsaOpen dev fmt PcmStreamCapture,
                            soundSourceClose = alsaClose,
@@ -317,7 +317,7 @@ alsaSoundSource dev fmt =
                           }
 
 alsaSoundSink :: String -> SoundFmt -> SoundSink Pcm
-alsaSoundSink dev fmt = 
+alsaSoundSink dev fmt =
     (nullSoundSink fmt) {
                          soundSinkOpen  = alsaOpen dev fmt PcmStreamPlayback,
                          soundSinkClose = alsaClose,
@@ -339,7 +339,7 @@ fileWrite fmt h buf n = hPutBuf h buf (n * c)
   where c = audioBytesPerSample fmt
 
 fileSoundSource :: FilePath -> SoundFmt -> SoundSource Handle
-fileSoundSource file fmt = 
+fileSoundSource file fmt =
     (nullSoundSource fmt) {
                            soundSourceOpen  = openBinaryFile file ReadMode,
                            soundSourceClose = hClose,
@@ -347,7 +347,7 @@ fileSoundSource file fmt =
                           }
 
 fileSoundSink :: FilePath -> SoundFmt -> SoundSink Handle
-fileSoundSink file fmt = 
+fileSoundSink file fmt =
     (nullSoundSink fmt) {
                          soundSinkOpen  = openBinaryFile file WriteMode,
                          soundSinkClose = hClose,
